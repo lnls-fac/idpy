@@ -1,0 +1,4 @@
+*~
+__pycache__/
+idpy/__pycache__/
+*.egg-info/
