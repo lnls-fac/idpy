@@ -2,7 +2,7 @@
 import numpy
 import matplotlib.pyplot as plt
 import idcpp
-import utils
+import idpy.utils as utils
 
 
 class FieldMapException(Exception):

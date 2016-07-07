@@ -1,6 +1,6 @@
 
 import idcpp
-import utils
+import idpy.utils as utils
 
 class Subblock(object):
 
