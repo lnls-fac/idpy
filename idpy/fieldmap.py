@@ -11,20 +11,20 @@ class FieldMapException(Exception):
 
 class FieldMap(object):
 
-    def __init__(self, label, filename_list, use_field_simmetry=False):
+    def __init__(self, label, filename_list, fieldmap3D=False):
         self.label = label
         if isinstance(filename_list, str):
             self.filename_list = [filename_list]
         else:
             self.filename_list = filename_list
         cpp_filename_list = idcpp.CppStringVector(self.filename_list)
-        self._fieldmap = idcpp.FieldMapContainer(cpp_filename_list, use_field_simmetry)
-        self.x_min = self._fieldmap.x_min
-        self.x_max = self._fieldmap.x_max
-        self.y_min = self._fieldmap.y_min
-        self.y_max = self._fieldmap.y_max
-        self.z_min = self._fieldmap.z_min
-        self.z_max = self._fieldmap.z_max
+        self._cppobj = idcpp.FieldMapContainer(cpp_filename_list, fieldmap3D)
+        self.x_min = self._cppobj.x_min
+        self.x_max = self._cppobj.x_max
+        self.y_min = self._cppobj.y_min
+        self.y_max = self._cppobj.y_max
+        self.z_min = self._cppobj.z_min
+        self.z_max = self._cppobj.z_max
 
     def _check_limits(self, pos):
         if isinstance(pos[0], (float, int)): positions = [pos]
@@ -41,11 +41,11 @@ class FieldMap(object):
         self._check_limits(pos)
         if isinstance(pos[0], (float, int)):
             cpp_pos = utils._vector_to_CppVector3D(pos)
-            cpp_field = self._fieldmap.field(cpp_pos)
+            cpp_field = self._cppobj.field(cpp_pos)
             field = utils._CppVector3D_to_vector(cpp_field)
         else:
             cpp_pos = utils._matrix_to_CppVectorVector3D(pos)
-            cpp_field = self._fieldmap.field(cpp_pos)
+            cpp_field = self._cppobj.field(cpp_pos)
             field = utils._CppVectorVector3D_to_matrix(cpp_field)
         return field
 

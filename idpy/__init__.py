@@ -1,7 +1,7 @@
 
 from . import fieldmap
-from . import kickmap
-from . import idmodel
+from . import cassette
+from . import insertiondevice
 from . import utils
 
 import os as _os
