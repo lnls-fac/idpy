@@ -1,18 +1,28 @@
 
+from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.pyplot as plt
 import numpy
 import idcpp
 import idpy.utils as utils
 
-class CassetteException(Exception):
+class HalbachCassetteException(Exception):
     pass
 
 
 class Subblock(object):
 
-    def __init__(self, dim, pos=[0,0,0]):
-        cpp_dim = utils._vector_to_CppVector3D(dim)
-        cpp_pos = utils._vector_to_CppVector3D(pos)
-        self._cppobj = idcpp.Subblock(cpp_dim, cpp_pos)
+    def __init__(self, dim=None, pos=[0,0,0], subblock=None):
+        if subblock is not None:
+            if isinstance(subblock, Subblock):
+                self._cppobj = subblock._cppobj
+            elif isinstance(subblock, idcpp.Subblock):
+                self._cppobj = subblock
+            else:
+                raise HalbachCassetteException("Invalid argument for Subblock constructor")
+        else:
+            cpp_dim = utils._vector_to_CppVector3D(dim)
+            cpp_pos = utils._vector_to_CppVector3D(pos)
+            self._cppobj = idcpp.Subblock(cpp_dim, cpp_pos)
 
     def get_matrix(self, pos):
         cpp_pos = utils._vector_to_CppVector3D(pos)
@@ -27,7 +37,7 @@ class Subblock(object):
     @dim.setter
     def dim(self, value):
         if not isinstance(value, (list, tuple, numpy.ndarray)) or len(value)!= 3:
-            raise CassetteException("Invalid dimension value for Subblock object")
+            raise HalbachCassetteException("Invalid dimension value for Subblock object")
         cpp_dim = utils._vector_to_CppVector3D(value)
         self._cppobj.dim = cpp_dim
 
@@ -39,18 +49,26 @@ class Subblock(object):
     @pos.setter
     def pos(self, value):
         if not isinstance(value, (list, tuple, numpy.ndarray)) or len(value)!= 3:
-            raise CassetteException("Invalid position value for Subblock object")
+            raise HalbachCassetteException("Invalid position value for Subblock object")
         cpp_pos = utils._vector_to_CppVector3D(value)
         self._cppobj.pos = cpp_pos
 
 
 class Block(object):
 
-    def __init__(self, mag, dim, pos=[0,0,0]):
-        cpp_mag = utils._vector_to_CppVector3D(mag)
-        cpp_dim = utils._vector_to_CppVector3D(dim)
-        cpp_pos = utils._vector_to_CppVector3D(pos)
-        self._cppobj = idcpp.Block(cpp_mag, cpp_dim, cpp_pos)
+    def __init__(self, mag=None, dim=None, pos=[0,0,0], block=None):
+        if block is not None:
+            if isinstance(block, Block):
+                self._cppobj = block._cppobj
+            elif isinstance(block, idcpp.Block):
+                self._cppobj = block
+            else:
+                raise HalbachCassetteException("Invalid argument for Block constructor")
+        else:
+            cpp_mag = utils._vector_to_CppVector3D(mag)
+            cpp_dim = utils._vector_to_CppVector3D(dim)
+            cpp_pos = utils._vector_to_CppVector3D(pos)
+            self._cppobj = idcpp.Block(cpp_mag, cpp_dim, cpp_pos)
 
     def add_subblock(self, subblock):
         if isinstance(subblock, Subblock):
@@ -77,10 +95,9 @@ class Block(object):
     @mag.setter
     def mag(self, value):
         if not isinstance(value, (list, tuple, numpy.ndarray)) or len(value)!= 3:
-            raise CassetteException("Invalid magnetization value for Block object")
+            raise HalbachCassetteException("Invalid magnetization value for Block object")
         cpp_mag = utils._vector_to_CppVector3D(value)
-        mag = self._cppobj.set_mag()
-        mag = cpp_mag
+        self._cppobj.set_mag(cpp_mag)
 
     @property
     def dim(self):
@@ -90,10 +107,9 @@ class Block(object):
     @dim.setter
     def dim(self, value):
         if not isinstance(value, (list, tuple, numpy.ndarray)) or len(value)!= 3:
-            raise CassetteException("Invalid dimension value for Block object")
+            raise HalbachCassetteException("Invalid dimension value for Block object")
         cpp_dim = utils._vector_to_CppVector3D(value)
-        dim = self._cppobj.set_dim()
-        dim = cpp_dim
+        self._cppobj.set_dim(cpp_dim)
 
     @property
     def pos(self):
@@ -103,22 +119,79 @@ class Block(object):
     @pos.setter
     def pos(self, value):
         if not isinstance(value, (list, tuple, numpy.ndarray)) or len(value)!= 3:
-            raise CassetteException("Invalid position value for Block object")
+            raise HalbachCassetteException("Invalid position value for Block object")
         cpp_pos = utils._vector_to_CppVector3D(value)
-        pos = self._cppobj.set_pos()
-        pos = cpp_pos
+        self._cppobj.set_pos(cpp_pos)
 
 
-class CassetteCassette(object):
+    def plot(self, block_color='blue', alpha=0.1, arrow_color='black', arrow_width=3, fig=None):
+        is_interactive = plt.isinteractive()
+        plt.interactive = False
 
-    def __init__(self, block, rot, nr_periods, spacing=0, N=4):
-        self.block = block
-        self.rot = rot
-        self.nr_periods = nr_periods
-        self.spacing = spacing
-        self.N = N
-        cpp_rot = utils._matrix_to_CppMatrix3D(rot)
-        self._cppobj = idcpp.CassetteCassette(self.block._cppobj, cpp_rot, self.nr_periods, self.spacing, self.N)
+        if fig is None: fig = plt.figure()
+        ax = fig.gca(projection='3d')
+
+        mag = self.mag
+        pos = 1000*self.pos
+        dim = 1000*self.dim
+        x1 = pos[0] - dim[0]/2.0
+        x2 = pos[0] + dim[0]/2.0
+        y1 = pos[1] - dim[1]/2.0
+        y2 = pos[1] + dim[1]/2.0
+        z1 = pos[2] - dim[2]/2.0
+        z2 = pos[2] + dim[2]/2.0
+        X, Y = numpy.meshgrid([x1, x2], [y1, y2])
+        ax.plot_surface(X,Y,z1, alpha=alpha, color=block_color)
+        ax.plot_surface(X,Y,z2, alpha=alpha, color=block_color)
+        X, Z = numpy.meshgrid([x1, x2], [z1, z2])
+        ax.plot_surface(X,y1,Z, alpha=alpha, color=block_color)
+        ax.plot_surface(X,y2,Z, alpha=alpha, color=block_color)
+        Y, Z = numpy.meshgrid([y1, y2], [z1, z2])
+        ax.plot_surface(x1,Y,Z, alpha=alpha, color=block_color)
+        ax.plot_surface(x2,Y,Z, alpha=alpha, color=block_color)
+        ax.quiver(pos[0], pos[1], pos[2], mag[0], mag[1], mag[2], length=0.9*min(dim), pivot='middle', color=arrow_color, linewidths=arrow_width)
+        ax.set_xlabel('x [mm]')
+        ax.set_ylabel('y [mm]')
+        ax.set_zlabel('z [mm]')
+
+        if is_interactive:
+            plt.interactive = True
+            plt.draw()
+            plt.show()
+
+        return fig
+
+
+class HalbachCassette(object):
+
+    def __init__(self, block=None, rot=None, nr_periods=None, spacing=0, N=4, halbachcassette=None):
+        if halbachcassette is not None:
+            if isinstance(halbachcassette, HalbachCassette):
+                self._cppobj = halbachcassette._cppobj
+            elif isinstance(halbachcassette, idcpp.HalbachCassette):
+                self._cppobj = halbachcassette
+            else:
+                raise HalbachCassetteException("Invalid argument for HalbachCassette constructor")
+        else:
+            if isinstance(block, Block): block = block._cppobj
+            if isinstance(rot, (list, tuple, numpy.ndarray)): rot = utils._matrix_to_CppMatrix3D(rot)
+            self._cppobj = idcpp.HalbachCassette(block, rot, nr_periods, spacing, N)
+
+    @property
+    def genblock(self):
+        return Block(block=self._cppobj.get_genblock())
+
+    @property
+    def nr_periods(self):
+        return int(self._cppobj.get_number_of_periods())
+
+    @property
+    def spacing(self):
+        return float(self._cppobj.get_block_separation())
+
+    @property
+    def N(self):
+        return int(self._cppobj.get_number_of_blocks_per_period())
 
     def set_horizontal_pos(self, h_pos):
         self._cppobj.set_x(h_pos)
@@ -129,17 +202,56 @@ class CassetteCassette(object):
     def set_longitudinal_pos(self, l_pos):
         self._cppobj.set_ycenter(l_pos)
 
+    def get_pos(self):
+        cpp_pos = self._cppobj.get_pos()
+        return utils._CppVector3D_to_vector(cpp_pos)
 
+    def get_dim(self):
+        cpp_dim = self._cppobj.get_dim()
+        return utils._CppVector3D_to_vector(cpp_dim)
+
+    def plot(self, nr_periods=1, block_color='blue', alpha=0.1, arrow_color='black', arrow_width=3, fig=None):
+        if nr_periods > self.nr_periods:
+            raise HalbachCassetteException("The number of periods should be less or equal the number of periods of the Halbach cassette")
+
+        is_interactive = plt.isinteractive()
+        plt.interactive = False
+
+        if fig is None: fig = plt.figure()
+
+        for i in range(self.N*nr_periods):
+            cpp_block = self._cppobj.get_item(i)
+            block = Block(block=cpp_block)
+            fig = block.plot(block_color=block_color, alpha=alpha, arrow_color=arrow_color, arrow_width=arrow_width, fig=fig)
+
+        if is_interactive:
+            plt.interactive = True
+            plt.draw()
+            plt.show()
+
+        return fig
 
 class EPU(object):
 
     def __init__(self, block, nr_periods, magnetic_gap, cassette_separation, block_separation=0.0):
-        self.block = block
-        self.nr_periods = nr_periods
-        self.magnetic_gap = magnetic_gap
-        self.cassette_separation = cassette_separation
-        self.block_separation = block_separation
-        self._cppobj = idcpp.EPU(self.block._cppobj, self.nr_periods, self.magnetic_gap, self.cassette_separation, self.block_separation)
+        if isinstance(block, Block): block = block._cppobj
+        self._cppobj = idcpp.EPU(block, nr_periods, magnetic_gap, cassette_separation, block_separation)
+
+    @property
+    def nr_periods(self):
+        return int(self._cppobj.get_number_of_periods())
+
+    @property
+    def magnetic_gap(self):
+        return float(self._cppobj.get_magnetic_gap())
+
+    @property
+    def cassette_separation(self):
+        return float(self._cppobj.get_cassette_separation())
+
+    @property
+    def block_separation(self):
+        return float(self._cppobj.get_block_separation())
 
     def set_phase_csd(self, phase):
         self._cppobj.set_phase_csd(phase)
@@ -153,16 +265,51 @@ class EPU(object):
         field = utils._CppVector3D_to_vector(cpp_field)
         return field
 
+    def plot(self, nr_periods=1, block_color='blue', alpha=0.1, arrow_color='black', arrow_width=3):
+        if nr_periods > self.nr_periods:
+            raise HalbachCassetteException("The number of periods should be less or equal the number of periods of the undulator")
+
+        is_interactive = plt.isinteractive()
+        plt.interactive = False
+        fig = plt.figure()
+
+        csd = HalbachCassette(halbachcassette=self._cppobj.csd)
+        cse = HalbachCassette(halbachcassette=self._cppobj.cse)
+        cid = HalbachCassette(halbachcassette=self._cppobj.cid)
+        cie = HalbachCassette(halbachcassette=self._cppobj.cie)
+        fig = csd.plot(nr_periods=nr_periods, block_color=block_color, alpha=alpha, arrow_color=arrow_color, arrow_width=arrow_width, fig=fig)
+        fig = cse.plot(nr_periods=nr_periods, block_color=block_color, alpha=alpha, arrow_color=arrow_color, arrow_width=arrow_width, fig=fig)
+        fig = cid.plot(nr_periods=nr_periods, block_color=block_color, alpha=alpha, arrow_color=arrow_color, arrow_width=arrow_width, fig=fig)
+        fig = cie.plot(nr_periods=nr_periods, block_color=block_color, alpha=alpha, arrow_color=arrow_color, arrow_width=arrow_width, fig=fig)
+
+        if is_interactive:
+            plt.interactive = True
+            plt.draw()
+            plt.show()
+
+        return fig
 
 class DELTA(object):
 
     def __init__(self, block, nr_periods, vertical_gap, horizontal_gap, block_separation=0.0):
-        self.block = block
-        self.nr_periods = nr_periods
-        self.vertical_gap = vertical_gap
-        self.horizontal_gap = horizontal_gap
-        self.block_separation = block_separation
-        self._cppobj = idcpp.DELTA(self.block._cppobj, self.nr_periods, self.vertical_gap, self.horizontal_gap, self.block_separation)
+        if isinstance(block, Block): block = block._cppobj
+        self._cppobj = idcpp.DELTA(block, nr_periods, vertical_gap, horizontal_gap, block_separation)
+
+    @property
+    def nr_periods(self):
+        return int(self._cppobj.get_number_of_periods())
+
+    @property
+    def vertical_gap(self):
+        return float(self._cppobj.get_vertical_gap())
+
+    @property
+    def horizontal_gap(self):
+        return float(self._cppobj.get_horizontal_gap())
+
+    @property
+    def block_separation(self):
+        return float(self._cppobj.get_block_separation())
 
     def set_phase_cs(self, phase):
         self._cppobj.set_phase_cs(phase)
@@ -175,3 +322,27 @@ class DELTA(object):
         cpp_field = self._cppobj.field(cpp_pos)
         field = utils._CppVector3D_to_vector(cpp_field)
         return field
+
+    def plot(self, nr_periods=1, block_color='blue', alpha=0.1, arrow_color='black', arrow_width=3):
+        if nr_periods > self.nr_periods:
+            raise HalbachCassetteException("The number of periods should be less or equal the number of periods of the undulator")
+
+        is_interactive = plt.isinteractive()
+        plt.interactive = False
+        fig = plt.figure()
+
+        cs = HalbachCassette(halbachcassette=self._cppobj.cs)
+        ci = HalbachCassette(halbachcassette=self._cppobj.ci)
+        cd = HalbachCassette(halbachcassette=self._cppobj.cd)
+        ce = HalbachCassette(halbachcassette=self._cppobj.ce)
+        fig = cs.plot(nr_periods=nr_periods, block_color=block_color, alpha=alpha, arrow_color=arrow_color, arrow_width=arrow_width, fig=fig)
+        fig = ci.plot(nr_periods=nr_periods, block_color=block_color, alpha=alpha, arrow_color=arrow_color, arrow_width=arrow_width, fig=fig)
+        fig = cd.plot(nr_periods=nr_periods, block_color=block_color, alpha=alpha, arrow_color=arrow_color, arrow_width=arrow_width, fig=fig)
+        fig = ce.plot(nr_periods=nr_periods, block_color=block_color, alpha=alpha, arrow_color=arrow_color, arrow_width=arrow_width, fig=fig)
+
+        if is_interactive:
+            plt.interactive = True
+            plt.draw()
+            plt.show()
+
+        return fig

@@ -134,20 +134,21 @@ class TestSubblock(unittest.TestCase):
             self.assertEqual(subblock.pos[i], idpy.utils._CppVector3D_to_vector(cpp_pos)[i])
 
     def test_get_matrix(self):
+        places = 15
         dim = [1,2,3]
         pos = [4,5,6]
         subblock = idpy.cassette.Subblock(dim, pos)
         r = [1,1,1]
         matrix = subblock.get_matrix(r)
-        self.assertAlmostEqual(matrix[0][0], -get_Qxx(r, pos, dim), places=15)
-        self.assertAlmostEqual(matrix[1][1], -get_Qyy(r, pos, dim), places=15)
-        self.assertAlmostEqual(matrix[2][2], -get_Qzz(r, pos, dim), places=15)
-        self.assertAlmostEqual(matrix[0][1], -get_Qxy(r, pos, dim), places=15)
-        self.assertAlmostEqual(matrix[0][1], -get_Qxy(r, pos, dim), places=15)
-        self.assertAlmostEqual(matrix[0][2], -get_Qxz(r, pos, dim), places=15)
-        self.assertAlmostEqual(matrix[2][0], -get_Qxz(r, pos, dim), places=15)
-        self.assertAlmostEqual(matrix[1][2], -get_Qyz(r, pos, dim), places=15)
-        self.assertAlmostEqual(matrix[2][1], -get_Qyz(r, pos, dim), places=15)
+        self.assertAlmostEqual(matrix[0][0], -get_Qxx(r, pos, dim), places=places)
+        self.assertAlmostEqual(matrix[1][1], -get_Qyy(r, pos, dim), places=places)
+        self.assertAlmostEqual(matrix[2][2], -get_Qzz(r, pos, dim), places=places)
+        self.assertAlmostEqual(matrix[0][1], -get_Qxy(r, pos, dim), places=places)
+        self.assertAlmostEqual(matrix[0][1], -get_Qxy(r, pos, dim), places=places)
+        self.assertAlmostEqual(matrix[0][2], -get_Qxz(r, pos, dim), places=places)
+        self.assertAlmostEqual(matrix[2][0], -get_Qxz(r, pos, dim), places=places)
+        self.assertAlmostEqual(matrix[1][2], -get_Qyz(r, pos, dim), places=places)
+        self.assertAlmostEqual(matrix[2][1], -get_Qyz(r, pos, dim), places=places)
 
 class TestBlock(unittest.TestCase):
 
@@ -192,13 +193,38 @@ class TestBlock(unittest.TestCase):
 
     def test_get_field(self):
         # Compared with Radia results
+        places = 9
+
+        # cube pos = [0,0,0]
         block = idpy.cassette.Block(mag=[-0.5,1,0.7], dim=[0.001,0.001,0.001], pos=[0,0,0])
         field = block.get_field([0.00052, 0.0006, 0.0007])
-        self.assertAlmostEqual(field[0], 0.12737, places=5)
-        self.assertAlmostEqual(field[1], 0.028644, places=6)
-        self.assertAlmostEqual(field[2], 0.077505, places=6)
+        self.assertAlmostEqual(field[0], 0.12736521535044731, places=places)
+        self.assertAlmostEqual(field[1], 0.028643724981960564, places=places)
+        self.assertAlmostEqual(field[2], 0.07750508014388427, places=places)
+
+        # rectangle pos = [0,0,0]
+        block = idpy.cassette.Block(mag=[-0.5,1,0.7], dim=[0.001,0.002,0.003], pos=[0,0,0])
+        field = block.get_field([0.00052, 0.0006, 0.0007])
+        self.assertAlmostEqual(field[0], -0.015850129558094617, places=places)
+        self.assertAlmostEqual(field[1], -0.25777020111156573, places=places)
+        self.assertAlmostEqual(field[2], -0.0718890758980946, places=places)
+
+        # rectangle pos != [0,0,0]
+        block = idpy.cassette.Block(mag=[-0.5,1,0.7], dim=[0.001,0.002,0.003], pos=[0.004,0.005,0.006])
+        field = block.get_field([0.00052, 0.0006, 0.0007])
+        self.assertAlmostEqual(field[0], 0.0017288710940030474, places=places)
+        self.assertAlmostEqual(field[1], 0.00042510633728255455, places=places)
+        self.assertAlmostEqual(field[2], 0.0009985839853064408, places=places)
+
+        # # rectangle pos = vertex
+        # block = idpy.cassette.Block(mag=[-0.5,1,0.7], dim=[0.001,0.002,0.003], pos=[0,0,0])
+        # field = block.get_field([0.001/2, 0.002/2, 0.003/2])
+        # self.assertAlmostEqual(field[0], 3.1366084983194256, places=places)
+        # self.assertAlmostEqual(field[1], 0.3845155172399829, places=places)
+        # self.assertAlmostEqual(field[2], 0.800948614051739, places=places)
 
     def test_get_matrix(self):
+        places = 15
         mag = [1,0,0]
         dim = [1,2,3]
         pos = [0,0,0]
@@ -213,29 +239,29 @@ class TestBlock(unittest.TestCase):
         Qxz = get_Qxz(r, pos, dim)
         Qyz = get_Qyz(r, pos, dim)
         if numpy.isnan(Qxx): self.assertTrue(numpy.isnan(matrix[0][0]))
-        else: self.assertAlmostEqual(matrix[0][0], -Qxx, places=15)
+        else: self.assertAlmostEqual(matrix[0][0], -Qxx, places=places)
         if numpy.isnan(Qyy): self.assertTrue(numpy.isnan(matrix[1][1]))
-        else: self.assertAlmostEqual(matrix[1][1], -Qyy, places=15)
+        else: self.assertAlmostEqual(matrix[1][1], -Qyy, places=places)
         if numpy.isnan(Qzz): self.assertTrue(numpy.isnan(matrix[2][2]))
-        else: self.assertAlmostEqual(matrix[2][2], -Qzz, places=15)
+        else: self.assertAlmostEqual(matrix[2][2], -Qzz, places=places)
         if numpy.isnan(Qxy):
             self.assertTrue(numpy.isnan(matrix[0][1]))
             self.assertTrue(numpy.isnan(matrix[1][0]))
         else:
-            self.assertAlmostEqual(matrix[0][1], -Qxy, places=15)
-            self.assertAlmostEqual(matrix[1][0], -Qxy, places=15)
+            self.assertAlmostEqual(matrix[0][1], -Qxy, places=places)
+            self.assertAlmostEqual(matrix[1][0], -Qxy, places=places)
         if numpy.isnan(Qxz):
             self.assertTrue(numpy.isnan(matrix[0][2]))
             self.assertTrue(numpy.isnan(matrix[2][0]))
         else:
-            self.assertAlmostEqual(matrix[0][2], -Qxz, places=15)
-            self.assertAlmostEqual(matrix[2][0], -Qxz, places=15)
+            self.assertAlmostEqual(matrix[0][2], -Qxz, places=places)
+            self.assertAlmostEqual(matrix[2][0], -Qxz, places=places)
         if numpy.isnan(Qyz):
             self.assertTrue(numpy.isnan(matrix[1][2]))
             self.assertTrue(numpy.isnan(matrix[2][1]))
         else:
-            self.assertAlmostEqual(matrix[1][2], -Qyz, places=15)
-            self.assertAlmostEqual(matrix[2][1], -Qyz, places=15)
+            self.assertAlmostEqual(matrix[1][2], -Qyz, places=places)
+            self.assertAlmostEqual(matrix[2][1], -Qyz, places=places)
 
         r = [0.9, 0.8, 0.7]
         matrix = block.get_matrix(r)
@@ -246,29 +272,29 @@ class TestBlock(unittest.TestCase):
         Qxz = get_Qxz(r, pos, dim)
         Qyz = get_Qyz(r, pos, dim)
         if numpy.isnan(Qxx): self.assertTrue(numpy.isnan(matrix[0][0]))
-        else: self.assertAlmostEqual(matrix[0][0], -Qxx, places=15)
+        else: self.assertAlmostEqual(matrix[0][0], -Qxx, places=places)
         if numpy.isnan(Qyy): self.assertTrue(numpy.isnan(matrix[1][1]))
-        else: self.assertAlmostEqual(matrix[1][1], -Qyy, places=15)
+        else: self.assertAlmostEqual(matrix[1][1], -Qyy, places=places)
         if numpy.isnan(Qzz): self.assertTrue(numpy.isnan(matrix[2][2]))
-        else: self.assertAlmostEqual(matrix[2][2], -Qzz, places=15)
+        else: self.assertAlmostEqual(matrix[2][2], -Qzz, places=places)
         if numpy.isnan(Qxy):
             self.assertTrue(numpy.isnan(matrix[0][1]))
             self.assertTrue(numpy.isnan(matrix[1][0]))
         else:
-            self.assertAlmostEqual(matrix[0][1], -Qxy, places=15)
-            self.assertAlmostEqual(matrix[1][0], -Qxy, places=15)
+            self.assertAlmostEqual(matrix[0][1], -Qxy, places=places)
+            self.assertAlmostEqual(matrix[1][0], -Qxy, places=places)
         if numpy.isnan(Qxz):
             self.assertTrue(numpy.isnan(matrix[0][2]))
             self.assertTrue(numpy.isnan(matrix[2][0]))
         else:
-            self.assertAlmostEqual(matrix[0][2], -Qxz, places=15)
-            self.assertAlmostEqual(matrix[2][0], -Qxz, places=15)
+            self.assertAlmostEqual(matrix[0][2], -Qxz, places=places)
+            self.assertAlmostEqual(matrix[2][0], -Qxz, places=places)
         if numpy.isnan(Qyz):
             self.assertTrue(numpy.isnan(matrix[1][2]))
             self.assertTrue(numpy.isnan(matrix[2][1]))
         else:
-            self.assertAlmostEqual(matrix[1][2], -Qyz, places=15)
-            self.assertAlmostEqual(matrix[2][1], -Qyz, places=15)
+            self.assertAlmostEqual(matrix[1][2], -Qyz, places=places)
+            self.assertAlmostEqual(matrix[2][1], -Qyz, places=places)
 
 
 def subblock_suite():
