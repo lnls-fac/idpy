@@ -296,6 +296,164 @@ class TestBlock(unittest.TestCase):
             self.assertAlmostEqual(matrix[1][2], -Qyz, places=places)
             self.assertAlmostEqual(matrix[2][1], -Qyz, places=places)
 
+class TestHalbachCassette(unittest.TestCase):
+
+    def setUp(self):
+        mag = [0,1,0]
+        dim = [0.06,0.06,0.06]
+        pos = [0,0,0]
+        rot = idpy.utils.rotx90p
+        nr_periods = 3
+        self.block = idpy.cassette.Block(mag, dim, pos)
+        self.hc = idpy.cassette.HalbachCassette(self.block, rot, nr_periods)
+
+    def test_block_attributes(self):
+        block = self.hc.genblock
+        self.assertIsInstance(block, idpy.cassette.Block)
+        self.assertEqual(block.mag[0], self.block.mag[0])
+        self.assertEqual(block.mag[1], self.block.mag[1])
+        self.assertEqual(block.mag[2], self.block.mag[2])
+        self.assertEqual(block.dim[0], self.block.dim[0])
+        self.assertEqual(block.dim[1], self.block.dim[1])
+        self.assertEqual(block.dim[2], self.block.dim[2])
+        self.assertEqual(block.pos[0], self.block.pos[0])
+        self.assertEqual(block.pos[1], self.block.pos[1])
+        self.assertEqual(block.pos[2], self.block.pos[2])
+
+    def test_field_1(self):
+        # Compared with Radia results
+        places = 9
+
+        z = [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7]
+        x = 0
+        y = 0.08
+
+        Bx_radia = [1.30049e-13, -7.74818e-14, -2.98265e-13, -1.44998e-13,
+                    4.62064e-14, 3.48942e-13, 2.49594e-13, 3.44542e-13,
+                    2.70621e-13, -3.43085e-13, -6.25783e-13, -2.05004e-13,
+                    -1.98829e-13, -9.70776e-14, -9.34111e-14]
+
+        By_radia = [0.04050762672019437, 0.008339898219329745, -0.00894114471014558,
+                    -0.005305145921854352, 0.0025769853669985257, 0.01622673647452067,
+                    0.000217664816845019, -0.01571376781824713, -0.0017719872174590697,
+                    0.006872303601084662, 0.012578619074111308, 0.0014462410865854498,
+                    -0.015643013367579433, -0.005335392051906099, -0.02691940857413397]
+
+        Bz_radia = [0.005467054395763381, 0.012673998232596063, 0.012659031851578212,
+                    -0.006486218981472727, -0.005852639651378765, 0.005833903581001741,
+                    0.004525573401882199, 0.005330194442501681,  -0.007015750430349238,
+                    -0.008698569246270157,  0.008636251540939952, 0.006219853821507807,
+                    0.0045896812696729185, 0.010180228920163972, 0.0029232033842000885]
+
+        for i in range(len(z)):
+            field = self.hc.field([x,y,z[i]])
+            self.assertAlmostEqual(field[0], Bx_radia[i], places=places)
+            self.assertAlmostEqual(field[1], By_radia[i], places=places)
+            self.assertAlmostEqual(field[2], Bz_radia[i], places=places)
+
+    def test_field_2(self):
+        # Compared with Radia results
+        places = 9
+
+        z = [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7]
+        x = 0.08
+        y = 0
+
+        Bx_radia = [-0.02267583536929591, -0.004893689584375202, 0.044502981397780174,
+                    0.03657696072735495, -0.02530730385131446, -0.044114530587223436,
+                    0.00021766486800510465, 0.04462749931464614, 0.026112301975111663,
+                    -0.035009802933447375, -0.04086550714792656, 0.014679828853431227,
+                    0.04754044875130907, 0.01953722773478487, -0.02492887408306263]
+
+        By_radia = [-0.02668584217652007, -0.007462622850768515, 0.017663994450641624,
+                    0.01452770996897797, -0.010768445258060918, -0.021124954091209437,
+                    3.0588996796769314e-11, 0.021124954133026935, 0.01076844527369537,
+                    -0.014527709932459514, -0.017663994472947517, 0.007462622836390941,
+                    0.026685842188568728, 0.017968676881478518, 0.007084838685975191]
+
+        Bz_radia = [-0.0016867571583455015, -0.034390945350447, -0.014357606712345355,
+                    0.028264259031775003, 0.03518156676800467, -0.008110306990898947,
+                    -0.041018628217512246, -0.008614016061706066, 0.034018455969522125,
+                    0.02605190880176584, -0.018380386939093836, -0.04084508983255506,
+                    -0.002564130283190331, 0.03500980553496835, 0.013842640429851982]
+
+        for i in range(len(z)):
+            field = self.hc.field([x,y,z[i]])
+            self.assertAlmostEqual(field[0], Bx_radia[i], places=places)
+            self.assertAlmostEqual(field[1], By_radia[i], places=places)
+            self.assertAlmostEqual(field[2], Bz_radia[i], places=places)
+
+
+    def test_field_3(self):
+        # Compared with Radia results
+        places = 9
+
+        z = [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7]
+        x = 0.07
+        y = 0.07
+
+        Bx_radia = [0.015239086466337622, 0.005984533747553157,
+                    -0.00016914845278838262, -0.0005436752828819708,
+                    0.0013089779955117512, 0.0036146572073705394,
+                    0.00017906184459031262, -0.0031973120545974445,
+                    -0.0006742157960213232, 0.0017153035724593666,
+                    0.0026514816073519563, -0.0003488648962614955,
+                    -0.004694983208436868, -0.005999313789114221,
+                    -0.012637062966347638]
+
+        By_radia = [0.001011948155698075, 0.0015759148783509877,
+                    0.007897940455371772, 0.006244980359662474, -0.004047447325958433,
+                    -0.0065536198725253255, 0.00017906186358674112,
+                    0.00697096505533258, 0.004682209541869015, -0.0050733520543975626,
+                    -0.005415607310466083, 0.004059753964915015, 0.009532155104659597,
+                    0.004959068559419961, -0.007411712410503368]
+
+        Bz_radia = [7.076159910430747e-6, -0.000053057299851446614,
+                    0.002043204397668986, 0.003762439977567161, 0.00419852764600375,
+                    0.00031624325449553095, -0.004063230242454286,
+                    -0.00012250081295737025, 0.003213327385329202,
+                    0.0019955723076551133, -0.0008025069150555627,
+                    -0.003431240533888704, 0.002319253579581008, 0.010065344968708183,
+                    0.00484410409783074]
+
+        for i in range(len(z)):
+            field = self.hc.field([x,y,z[i]])
+            self.assertAlmostEqual(field[0], Bx_radia[i], places=places)
+            self.assertAlmostEqual(field[1], By_radia[i], places=places)
+            self.assertAlmostEqual(field[2], Bz_radia[i], places=places)
+
+    # def test_field_inside_blocks(self):
+    #     # Compared with Radia results
+    #     places = 9
+    #
+    #     z = [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7]
+    #     x = 0.02
+    #     y = 0.01
+    #
+    #     Bx_radia = [0.008360536195792303, -0.0419406308963095, 0.106721516945529,
+    #                 0.15569795511284806, -0.10827120868599616, -0.05488638236945871,
+    #                 0.00006079038578511785, 0.055032759915610005, 0.10851536825201567,
+    #                 -0.15516882114443895, -0.1052245096303979, 0.048111798541887026,
+    #                 0.03942137631399532, 0.04720750870084145, -0.13215781046358085]
+    #
+    #     By_radia = [0.6838176356035767, -0.06859221478849603, -0.7057767854766674,
+    #                 -0.7664798577792293, -0.1488072012169997, 0.6771283137169212,
+    #                 0.00003039536709614007, -0.6770551250687963, 0.14892927967242878,
+    #                 -0.2332555802686458, 0.7065251939703954, 0.0716736254599617,
+    #                 -0.6610135102998642, 0.1070387676123912, -0.03667834274532688]
+    #
+    #     Bz_radia = [0.10168726783566287, 0.7465175677989531, 0.2549853918504647,
+    #                 -0.4605097108950627, -0.6486450794557929, 0.10787505324987284,
+    #                 0.7453362580975897, 0.1072335856205666, -0.65020645236017,
+    #                 -0.463835967767599, 0.2472882735493802, 0.7240666485292824,
+    #                 -0.0025076039698680164, -0.7239083495082733, -0.25250935652850187]
+    #
+    #     for i in range(len(z)):
+    #         field = self.hc.field([x,y,z[i]])
+    #         self.assertAlmostEqual(field[0], Bx_radia[i], places=places)
+    #         self.assertAlmostEqual(field[1], By_radia[i], places=places)
+    #         self.assertAlmostEqual(field[2], Bz_radia[i], places=places)
+
 
 def subblock_suite():
     suite = unittest.TestLoader().loadTestsFromTestCase(TestSubblock)
@@ -305,8 +463,13 @@ def block_suite():
     suite = unittest.TestLoader().loadTestsFromTestCase(TestBlock)
     return suite
 
+def halbach_cassette_suite():
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestHalbachCassette)
+    return suite
+
 def get_suite():
     suite_list = []
     suite_list.append(subblock_suite())
     suite_list.append(block_suite())
+    suite_list.append(halbach_cassette_suite())
     return unittest.TestSuite(suite_list)

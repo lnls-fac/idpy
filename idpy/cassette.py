@@ -124,12 +124,13 @@ class Block(object):
         self._cppobj.set_pos(cpp_pos)
 
 
-    def plot(self, block_color='blue', alpha=0.1, arrow_color='black', arrow_width=3, fig=None):
+    def plot(self, block_color='blue', alpha=0.1, arrow_color='black', arrow_width=3, fig=None, ax=None):
         is_interactive = plt.isinteractive()
         plt.interactive = False
 
-        if fig is None: fig = plt.figure()
-        ax = fig.gca(projection='3d')
+        if fig is None:
+            fig = plt.figure()
+            ax =  fig.add_subplot(111, projection='3d')
 
         mag = self.mag
         pos = 1000*self.pos
@@ -141,25 +142,25 @@ class Block(object):
         z1 = pos[2] - dim[2]/2.0
         z2 = pos[2] + dim[2]/2.0
         X, Y = numpy.meshgrid([x1, x2], [y1, y2])
-        ax.plot_surface(X,Y,z1, alpha=alpha, color=block_color)
-        ax.plot_surface(X,Y,z2, alpha=alpha, color=block_color)
+        ax.plot_surface(X,z1,Y, alpha=alpha, color=block_color)
+        ax.plot_surface(X,z2,Y, alpha=alpha, color=block_color)
         X, Z = numpy.meshgrid([x1, x2], [z1, z2])
-        ax.plot_surface(X,y1,Z, alpha=alpha, color=block_color)
-        ax.plot_surface(X,y2,Z, alpha=alpha, color=block_color)
+        ax.plot_surface(X,Z,y1, alpha=alpha, color=block_color)
+        ax.plot_surface(X,Z,y2, alpha=alpha, color=block_color)
         Y, Z = numpy.meshgrid([y1, y2], [z1, z2])
-        ax.plot_surface(x1,Y,Z, alpha=alpha, color=block_color)
-        ax.plot_surface(x2,Y,Z, alpha=alpha, color=block_color)
-        ax.quiver(pos[0], pos[1], pos[2], mag[0], mag[1], mag[2], length=0.9*min(dim), pivot='middle', color=arrow_color, linewidths=arrow_width)
+        ax.plot_surface(x1,Z,Y, alpha=alpha, color=block_color)
+        ax.plot_surface(x2,Z,Y, alpha=alpha, color=block_color)
+        ax.quiver(pos[0], pos[2], pos[1], mag[0], mag[2], mag[1], length=0.9*min(dim), pivot='middle', color=arrow_color, linewidths=arrow_width)
         ax.set_xlabel('x [mm]')
-        ax.set_ylabel('y [mm]')
-        ax.set_zlabel('z [mm]')
+        ax.set_ylabel('z [mm]')
+        ax.set_zlabel('y [mm]')
 
         if is_interactive:
             plt.interactive = True
             plt.draw()
             plt.show()
 
-        return fig
+        return fig, ax
 
 
 class HalbachCassette(object):
@@ -210,26 +211,61 @@ class HalbachCassette(object):
         cpp_dim = self._cppobj.get_dim()
         return utils._CppVector3D_to_vector(cpp_dim)
 
-    def plot(self, nr_periods=1, block_color='blue', alpha=0.1, arrow_color='black', arrow_width=3, fig=None):
+    def get_item(self, i):
+        cpp_block = self._cppobj.get_item(i)
+        return Block(block=cpp_block)
+
+    def field(self, pos):
+        cpp_pos = utils._vector_to_CppVector3D(pos)
+        cpp_field = self._cppobj.get_field(cpp_pos)
+        field = utils._CppVector3D_to_vector(cpp_field)
+        return field
+
+    def plot(self, nr_periods=1, block_color='blue', alpha=0.1, arrow_color='black', arrow_width=3, fig=None, ax=None):
         if nr_periods > self.nr_periods:
             raise HalbachCassetteException("The number of periods should be less or equal the number of periods of the Halbach cassette")
 
         is_interactive = plt.isinteractive()
         plt.interactive = False
 
-        if fig is None: fig = plt.figure()
+        if fig is None:
+            fig = plt.figure()
+            ax =  fig.add_subplot(111, projection='3d')
 
         for i in range(self.N*nr_periods):
             cpp_block = self._cppobj.get_item(i)
             block = Block(block=cpp_block)
-            fig = block.plot(block_color=block_color, alpha=alpha, arrow_color=arrow_color, arrow_width=arrow_width, fig=fig)
+            mag = block.mag
+            pos = 1000*block.pos
+            dim = 1000*block.dim
+
+            x1 = pos[0] - dim[0]/2.0
+            x2 = pos[0] + dim[0]/2.0
+            y1 = pos[1] - dim[1]/2.0
+            y2 = pos[1] + dim[1]/2.0
+            z1 = pos[2] - dim[2]/2.0
+            z2 = pos[2] + dim[2]/2.0
+            X, Y = numpy.meshgrid([x1, x2], [y1, y2])
+            ax.plot_surface(X,z1,Y, alpha=alpha, color=block_color)
+            ax.plot_surface(X,z2,Y, alpha=alpha, color=block_color)
+            X, Z = numpy.meshgrid([x1, x2], [z1, z2])
+            ax.plot_surface(X,Z,y1, alpha=alpha, color=block_color)
+            ax.plot_surface(X,Z,y2, alpha=alpha, color=block_color)
+            Y, Z = numpy.meshgrid([y1, y2], [z1, z2])
+            ax.plot_surface(x1,Z,Y, alpha=alpha, color=block_color)
+            ax.plot_surface(x2,Z,Y, alpha=alpha, color=block_color)
+            ax.quiver(pos[0], pos[2], pos[1], mag[0], mag[2], mag[1], length=0.9*min(dim), pivot='middle', color=arrow_color, linewidths=arrow_width)
+
+        ax.set_xlabel('x [mm]')
+        ax.set_ylabel('z [mm]')
+        ax.set_zlabel('y [mm]')
 
         if is_interactive:
             plt.interactive = True
             plt.draw()
             plt.show()
 
-        return fig
+        return fig, ax
 
 class EPU(object):
 
@@ -272,22 +308,49 @@ class EPU(object):
         is_interactive = plt.isinteractive()
         plt.interactive = False
         fig = plt.figure()
+        ax =  fig.add_subplot(111, projection='3d')
 
         csd = HalbachCassette(halbachcassette=self._cppobj.csd)
         cse = HalbachCassette(halbachcassette=self._cppobj.cse)
         cid = HalbachCassette(halbachcassette=self._cppobj.cid)
         cie = HalbachCassette(halbachcassette=self._cppobj.cie)
-        fig = csd.plot(nr_periods=nr_periods, block_color=block_color, alpha=alpha, arrow_color=arrow_color, arrow_width=arrow_width, fig=fig)
-        fig = cse.plot(nr_periods=nr_periods, block_color=block_color, alpha=alpha, arrow_color=arrow_color, arrow_width=arrow_width, fig=fig)
-        fig = cid.plot(nr_periods=nr_periods, block_color=block_color, alpha=alpha, arrow_color=arrow_color, arrow_width=arrow_width, fig=fig)
-        fig = cie.plot(nr_periods=nr_periods, block_color=block_color, alpha=alpha, arrow_color=arrow_color, arrow_width=arrow_width, fig=fig)
+        cassettes = [csd, cse, cid, cie]
+
+        for c in cassettes:
+            for i in range(csd.N*nr_periods):
+                cpp_block = c.get_item(i)
+                block = Block(block=cpp_block)
+                mag = block.mag
+                pos = 1000*block.pos
+                dim = 1000*block.dim
+
+                x1 = pos[0] - dim[0]/2.0
+                x2 = pos[0] + dim[0]/2.0
+                y1 = pos[1] - dim[1]/2.0
+                y2 = pos[1] + dim[1]/2.0
+                z1 = pos[2] - dim[2]/2.0
+                z2 = pos[2] + dim[2]/2.0
+                X, Y = numpy.meshgrid([x1, x2], [y1, y2])
+                ax.plot_surface(X,z1,Y, alpha=alpha, color=block_color)
+                ax.plot_surface(X,z2,Y, alpha=alpha, color=block_color)
+                X, Z = numpy.meshgrid([x1, x2], [z1, z2])
+                ax.plot_surface(X,Z,y1, alpha=alpha, color=block_color)
+                ax.plot_surface(X,Z,y2, alpha=alpha, color=block_color)
+                Y, Z = numpy.meshgrid([y1, y2], [z1, z2])
+                ax.plot_surface(x1,Z,Y, alpha=alpha, color=block_color)
+                ax.plot_surface(x2,Z,Y, alpha=alpha, color=block_color)
+                ax.quiver(pos[0], pos[2], pos[1], mag[0], mag[2], mag[1], length=0.9*min(dim), pivot='middle', color=arrow_color, linewidths=arrow_width)
+
+        ax.set_xlabel('x [mm]')
+        ax.set_ylabel('z [mm]')
+        ax.set_zlabel('y [mm]')
 
         if is_interactive:
             plt.interactive = True
             plt.draw()
             plt.show()
 
-        return fig
+        return fig, ax
 
 class DELTA(object):
 
@@ -330,19 +393,46 @@ class DELTA(object):
         is_interactive = plt.isinteractive()
         plt.interactive = False
         fig = plt.figure()
+        ax =  fig.add_subplot(111, projection='3d')
 
         cs = HalbachCassette(halbachcassette=self._cppobj.cs)
         ci = HalbachCassette(halbachcassette=self._cppobj.ci)
         cd = HalbachCassette(halbachcassette=self._cppobj.cd)
         ce = HalbachCassette(halbachcassette=self._cppobj.ce)
-        fig = cs.plot(nr_periods=nr_periods, block_color=block_color, alpha=alpha, arrow_color=arrow_color, arrow_width=arrow_width, fig=fig)
-        fig = ci.plot(nr_periods=nr_periods, block_color=block_color, alpha=alpha, arrow_color=arrow_color, arrow_width=arrow_width, fig=fig)
-        fig = cd.plot(nr_periods=nr_periods, block_color=block_color, alpha=alpha, arrow_color=arrow_color, arrow_width=arrow_width, fig=fig)
-        fig = ce.plot(nr_periods=nr_periods, block_color=block_color, alpha=alpha, arrow_color=arrow_color, arrow_width=arrow_width, fig=fig)
+        cassettes = [cs, ci, cd, ce]
+
+        for c in cassettes:
+            for i in range(csd.N*nr_periods):
+                cpp_block = c.get_item(i)
+                block = Block(block=cpp_block)
+                mag = block.mag
+                pos = 1000*block.pos
+                dim = 1000*block.dim
+
+                x1 = pos[0] - dim[0]/2.0
+                x2 = pos[0] + dim[0]/2.0
+                y1 = pos[1] - dim[1]/2.0
+                y2 = pos[1] + dim[1]/2.0
+                z1 = pos[2] - dim[2]/2.0
+                z2 = pos[2] + dim[2]/2.0
+                X, Y = numpy.meshgrid([x1, x2], [y1, y2])
+                ax.plot_surface(X,z1,Y, alpha=alpha, color=block_color)
+                ax.plot_surface(X,z2,Y, alpha=alpha, color=block_color)
+                X, Z = numpy.meshgrid([x1, x2], [z1, z2])
+                ax.plot_surface(X,Z,y1, alpha=alpha, color=block_color)
+                ax.plot_surface(X,Z,y2, alpha=alpha, color=block_color)
+                Y, Z = numpy.meshgrid([y1, y2], [z1, z2])
+                ax.plot_surface(x1,Z,Y, alpha=alpha, color=block_color)
+                ax.plot_surface(x2,Z,Y, alpha=alpha, color=block_color)
+                ax.quiver(pos[0], pos[2], pos[1], mag[0], mag[2], mag[1], length=0.9*min(dim), pivot='middle', color=arrow_color, linewidths=arrow_width)
+
+        ax.set_xlabel('x [mm]')
+        ax.set_ylabel('z [mm]')
+        ax.set_zlabel('y [mm]')
 
         if is_interactive:
             plt.interactive = True
             plt.draw()
             plt.show()
 
-        return fig
+        return fig, ax
