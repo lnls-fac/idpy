@@ -454,6 +454,89 @@ class TestHalbachCassette(unittest.TestCase):
     #         self.assertAlmostEqual(field[1], By_radia[i], places=places)
     #         self.assertAlmostEqual(field[2], Bz_radia[i], places=places)
 
+    def test_rectangular_block(self):
+        # Compared with Radia results
+        places = 9
+
+        mag = [0,1,0]
+        dim = [0.06,0.08,0.07]
+        pos = [0,0,0]
+        rot = idpy.utils.rotx90p
+        nr_periods = 3
+        block = idpy.cassette.Block(mag, dim, pos)
+        cassette = idpy.cassette.HalbachCassette(block, rot, nr_periods)
+
+        x = 0.07
+        y = 0.09
+        z = [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8]
+
+        Bx_radia = [
+            0.016424277530419782, 0.007154771556406419,
+            0.00039029390313573644, -0.0039588910563416,
+            0.00006601469637097492, 0.0037767058769945998,
+            0.004695936397874936, 0.00015146468300237436,
+            -0.004356353562821242, -0.003309297702610594,
+            0.0006878357652581031, 0.005329416740797426,
+            0.0023377063356237776, -0.001529265058365573,
+            -0.0066827406938958205, -0.006172727552882329,
+            -0.011476920206438087
+        ]
+        By_radia = [
+            0.004859969636660026, 0.002111901329473888, 0.006360603503739992,
+            0.005638710275473825, 0.002163907897239742, -0.004291985240902977,
+            -0.004485752938318748, 0.00019352635980213724,
+            0.0049192800405609294, 0.004887300896420193,
+            -0.0012074395204480697, -0.00390997578553378,
+            -0.0029509683808509406, 0.004821557431205883,
+            0.0069447716647040286, 0.004765086834031235, -0.007275923271958545
+        ]
+        Bz_radia = [
+            0.0006265905515855832, 0.0023304193332510737,
+            0.0024169963118642825, 0.0021239366008861393,
+            0.0041782842497147445, 0.0012571639548221538,
+            0.0007424600848474972, -0.002581675811747594,
+            0.0003741193168782884, 0.0004531600739135287,
+            0.0027911012324712547, -0.00007906975238024467,
+            -0.0007832716577587857, -0.001035320638811146,
+            0.002704488547569129, 0.008262428945787267, 0.008038694706564115
+        ]
+
+        for i in range(len(z)):
+            field = cassette.field([x,y,z[i]])
+            self.assertAlmostEqual(field[0], Bx_radia[i], places=places)
+            self.assertAlmostEqual(field[1], By_radia[i], places=places)
+            self.assertAlmostEqual(field[2], Bz_radia[i], places=places)
+
+        pos = []
+        for i in range(len(z)):
+            pos.append([x,y,z[i]])
+        field = cassette.field(pos)
+
+        for i in range(len(field)):
+            self.assertAlmostEqual(field[i][0], Bx_radia[i], places=places)
+            self.assertAlmostEqual(field[i][1], By_radia[i], places=places)
+            self.assertAlmostEqual(field[i][2], Bz_radia[i], places=places)
+
+    def test_set_pos(self):
+        mag = [0,1,0]
+        dim = [0.06,0.06,0.06]
+        pos = [0,0,0]
+        rot = idpy.utils.rotx90p
+        nr_periods = 3
+        block = idpy.cassette.Block(mag, dim, pos)
+        cassette = idpy.cassette.HalbachCassette(block, rot, nr_periods)
+        cassette.set_horizontal_pos(100)
+        cassette.set_vertical_pos(-5)
+        cassette.set_longitudinal_pos(8)
+
+        pos = cassette.get_pos()
+        dim = cassette.get_dim()
+        self.assertEqual(cassette.genblock.pos[0], 100)
+        self.assertEqual(cassette.genblock.pos[1], -5)
+        self.assertEqual(cassette.genblock.pos[2], 8 - dim[2]/2)
+        self.assertEqual(pos[0], 100)
+        self.assertEqual(pos[1], -5)
+        self.assertEqual(pos[2], 8)
 
 def subblock_suite():
     suite = unittest.TestLoader().loadTestsFromTestCase(TestSubblock)

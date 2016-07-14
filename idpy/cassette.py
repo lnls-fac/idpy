@@ -198,10 +198,10 @@ class HalbachCassette(object):
         self._cppobj.set_x(h_pos)
 
     def set_vertical_pos(self, v_pos):
-        self._cppobj.set_z(v_pos)
+        self._cppobj.set_y(v_pos)
 
     def set_longitudinal_pos(self, l_pos):
-        self._cppobj.set_ycenter(l_pos)
+        self._cppobj.set_zcenter(l_pos)
 
     def get_pos(self):
         cpp_pos = self._cppobj.get_pos()
@@ -216,9 +216,14 @@ class HalbachCassette(object):
         return Block(block=cpp_block)
 
     def field(self, pos):
-        cpp_pos = utils._vector_to_CppVector3D(pos)
-        cpp_field = self._cppobj.get_field(cpp_pos)
-        field = utils._CppVector3D_to_vector(cpp_field)
+        if isinstance(pos[0], (float, int)):
+            cpp_pos = utils._vector_to_CppVector3D(pos)
+            cpp_field = self._cppobj.get_field(cpp_pos)
+            field = utils._CppVector3D_to_vector(cpp_field)
+        else:
+            cpp_pos = utils._matrix_to_CppVectorVector3D(pos)
+            cpp_field = self._cppobj.get_field(cpp_pos)
+            field = utils._CppVectorVector3D_to_matrix(cpp_field)
         return field
 
     def plot(self, nr_periods=1, block_color='blue', alpha=0.1, arrow_color='black', arrow_width=3, fig=None, ax=None):
@@ -296,9 +301,14 @@ class EPU(object):
         self._cppobj.set_phase_cie(phase)
 
     def field(self, pos):
-        cpp_pos = utils._vector_to_CppVector3D(pos)
-        cpp_field = self._cppobj.field(cpp_pos)
-        field = utils._CppVector3D_to_vector(cpp_field)
+        if isinstance(pos[0], (float, int)):
+            cpp_pos = utils._vector_to_CppVector3D(pos)
+            cpp_field = self._cppobj.field(cpp_pos)
+            field = utils._CppVector3D_to_vector(cpp_field)
+        else:
+            cpp_pos = utils._matrix_to_CppVectorVector3D(pos)
+            cpp_field = self._cppobj.field(cpp_pos)
+            field = utils._CppVectorVector3D_to_matrix(cpp_field)
         return field
 
     def plot(self, nr_periods=1, block_color='blue', alpha=0.1, arrow_color='black', arrow_width=3):
@@ -381,9 +391,14 @@ class DELTA(object):
         self._cppobj.set_phase_ci(phase)
 
     def field(self, pos):
-        cpp_pos = utils._vector_to_CppVector3D(pos)
-        cpp_field = self._cppobj.field(cpp_pos)
-        field = utils._CppVector3D_to_vector(cpp_field)
+        if isinstance(pos[0], (float, int)):
+            cpp_pos = utils._vector_to_CppVector3D(pos)
+            cpp_field = self._cppobj.field(cpp_pos)
+            field = utils._CppVector3D_to_vector(cpp_field)
+        else:
+            cpp_pos = utils._matrix_to_CppVectorVector3D(pos)
+            cpp_field = self._cppobj.field(cpp_pos)
+            field = utils._CppVectorVector3D_to_matrix(cpp_field)
         return field
 
     def plot(self, nr_periods=1, block_color='blue', alpha=0.1, arrow_color='black', arrow_width=3):
