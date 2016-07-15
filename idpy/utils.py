@@ -71,9 +71,25 @@ def _CppMatrix3D_to_matrix(CppMatrix3D):
     matrix = numpy.array(m)
     return matrix
 
-rotx90p = _CppMatrix3D_to_matrix(idcpp.CppMatrix3D_rotx90p())
-rotx90n = _CppMatrix3D_to_matrix(idcpp.CppMatrix3D_rotx90n())
-roty90p = _CppMatrix3D_to_matrix(idcpp.CppMatrix3D_roty90p())
-roty90n = _CppMatrix3D_to_matrix(idcpp.CppMatrix3D_roty90n())
-rotz90p = _CppMatrix3D_to_matrix(idcpp.CppMatrix3D_rotz90p())
-rotz90n = _CppMatrix3D_to_matrix(idcpp.CppMatrix3D_rotz90n())
+def get_rotation_matrix_x(angle):
+    I = idcpp.CppMatrix3D.I()
+    I.set_rotation_x(angle)
+    return _CppMatrix3D_to_matrix(I)
+
+def get_rotation_matrix_y(angle):
+    I = idcpp.CppMatrix3D.I()
+    I.set_rotation_y(angle)
+    return _CppMatrix3D_to_matrix(I)
+
+def get_rotation_matrix_z(angle):
+    I = idcpp.CppMatrix3D.I()
+    I.set_rotation_z(angle)
+    return _CppMatrix3D_to_matrix(I)
+
+
+rotx90p  = _CppMatrix3D_to_matrix(idcpp.CppMatrix3D_rotx90p())
+rotx90n  = _CppMatrix3D_to_matrix(idcpp.CppMatrix3D_rotx90n())
+roty90p  = _CppMatrix3D_to_matrix(idcpp.CppMatrix3D_roty90p())
+roty90n  = _CppMatrix3D_to_matrix(idcpp.CppMatrix3D_roty90n())
+rotz90p  = _CppMatrix3D_to_matrix(idcpp.CppMatrix3D_rotz90p())
+rotz90n  = _CppMatrix3D_to_matrix(idcpp.CppMatrix3D_rotz90n())

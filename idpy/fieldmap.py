@@ -14,17 +14,40 @@ class FieldMap(object):
     def __init__(self, label, filename_list, fieldmap3D=False):
         self.label = label
         if isinstance(filename_list, str):
-            self.filename_list = [filename_list]
+            self._filename_list = [filename_list]
         else:
-            self.filename_list = filename_list
-        cpp_filename_list = idcpp.CppStringVector(self.filename_list)
+            self._filename_list = filename_list
+        cpp_filename_list = idcpp.CppStringVector(self._filename_list)
         self._cppobj = idcpp.FieldMapContainer(cpp_filename_list, fieldmap3D)
-        self.x_min = self._cppobj.x_min
-        self.x_max = self._cppobj.x_max
-        self.y_min = self._cppobj.y_min
-        self.y_max = self._cppobj.y_max
-        self.z_min = self._cppobj.z_min
-        self.z_max = self._cppobj.z_max
+
+    @property
+    def filename_list(self):
+        return self._filename_list
+
+    @property
+    def x_min(self):
+        return self._cppobj.x_min
+
+    @property
+    def x_max(self):
+        return self._cppobj.x_max
+
+    @property
+    def y_min(self):
+        return self._cppobj.y_min
+
+    @property
+    def y_max(self):
+        return self._cppobj.y_max
+
+    @property
+    def z_min(self):
+        return self._cppobj.z_min
+
+    @property
+    def z_max(self):
+        return self._cppobj.z_max
+
 
     def _check_limits(self, pos):
         if isinstance(pos[0], (float, int)): positions = [pos]

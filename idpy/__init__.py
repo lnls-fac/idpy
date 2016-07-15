@@ -2,6 +2,7 @@
 from . import fieldmap
 from . import cassette
 from . import insertiondevice
+from . import auxiliary
 from . import utils
 
 import os as _os
