@@ -364,7 +364,7 @@ class TestHalbachCassette(unittest.TestCase):
         self.assertEqual(center_pos[2], 0 + dim[2]/2)
 
 
-    def test_field_vertcial_direction(self):
+    def test_field_vertical_direction(self):
         # Compared with Radia results
         places = 9
 

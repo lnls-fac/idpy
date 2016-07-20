@@ -140,6 +140,52 @@ class TestUtils(unittest.TestCase):
             for j in range(len(matrix[0])):
                 self.assertEqual(matrix[i][j], new_matrix[i][j])
 
+    def test_rotation_matrix(self):
+        m = idpy.utils.get_rotation_matrix_x(numpy.pi/4)
+        self.assertAlmostEqual(m[0][0], 1)
+        self.assertAlmostEqual(m[0][1], 0)
+        self.assertAlmostEqual(m[0][2], 0)
+        self.assertAlmostEqual(m[1][0], 0)
+        self.assertAlmostEqual(m[1][1], 0.7071067811865476)
+        self.assertAlmostEqual(m[1][2], -0.7071067811865476)
+        self.assertAlmostEqual(m[2][0], 0)
+        self.assertAlmostEqual(m[2][1], 0.7071067811865476)
+        self.assertAlmostEqual(m[2][2], 0.7071067811865476)
+
+        m = idpy.utils.get_rotation_matrix_x(numpy.pi/8)
+        self.assertAlmostEqual(m[0][0], 1)
+        self.assertAlmostEqual(m[0][1], 0)
+        self.assertAlmostEqual(m[0][2], 0)
+        self.assertAlmostEqual(m[1][0], 0)
+        self.assertAlmostEqual(m[1][1], 0.9238795325112867)
+        self.assertAlmostEqual(m[1][2], -0.3826834323650898)
+        self.assertAlmostEqual(m[2][0], 0)
+        self.assertAlmostEqual(m[2][1], 0.3826834323650898)
+        self.assertAlmostEqual(m[2][2], 0.9238795325112867)
+
+        m = idpy.utils.get_rotation_matrix_y(numpy.pi/8)
+        self.assertAlmostEqual(m[0][0], 0.9238795325112867)
+        self.assertAlmostEqual(m[0][1], 0)
+        self.assertAlmostEqual(m[0][2], 0.3826834323650898)
+        self.assertAlmostEqual(m[1][0], 0)
+        self.assertAlmostEqual(m[1][1], 1)
+        self.assertAlmostEqual(m[1][2], 0)
+        self.assertAlmostEqual(m[2][0], -0.3826834323650898)
+        self.assertAlmostEqual(m[2][1], 0)
+        self.assertAlmostEqual(m[2][2], 0.9238795325112867)
+
+        m = idpy.utils.get_rotation_matrix_z(numpy.pi/8)
+        self.assertAlmostEqual(m[0][0], 0.9238795325112867)
+        self.assertAlmostEqual(m[0][1], -0.3826834323650898)
+        self.assertAlmostEqual(m[0][2], 0)
+        self.assertAlmostEqual(m[1][0], 0.3826834323650898)
+        self.assertAlmostEqual(m[1][1], 0.9238795325112867)
+        self.assertAlmostEqual(m[1][2], 0)
+        self.assertAlmostEqual(m[2][0], 0)
+        self.assertAlmostEqual(m[2][1], 0)
+        self.assertAlmostEqual(m[2][2], 1)
+
+
 def utils_suite():
     suite = unittest.TestLoader().loadTestsFromTestCase(TestUtils)
     return suite

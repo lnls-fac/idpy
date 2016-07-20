@@ -5,6 +5,11 @@ import matplotlib.pyplot as plt
 import numpy
 import idcpp
 import idpy.utils as utils
+import idpy.cassette as cassette
+
+
+class InsertionDeviceException(Exception):
+    pass
 
 
 class IDModel(object):
@@ -16,23 +21,23 @@ class IDModel(object):
             elif isinstance(idmodel, idcpp.InsertionDevice):
                 self._cppobj = idcpp.InsertionDevice(idmodel)
             else:
-                raise HalbachCassetteException("Invalid argument for IDModel constructor")
+                raise InsertionDeviceException("Invalid argument for IDModel constructor")
         else:
             cpp_list_cassettes = []
             if isinstance(cassettes, (list, tuple, numpy.ndarray)):
                 for cassette in cassettes:
-                    if isinstance(cassette, HalbachCassette):
+                    if isinstance(cassette, cassette.HalbachCassette):
                         cpp_list_cassettes.append(cassette._cppobj)
                     elif isinstance(cassette, idcpp.HalbachCassette):
                         cpp_list_cassettes.append(cassette)
                     else:
-                        raise HalbachCassetteException("Invalid argument for IDModel constructor")
-            elif isinstance(cassettes, HalbachCassette):
+                        raise InsertionDeviceException("Invalid argument for IDModel constructor")
+            elif isinstance(cassettes, cassette.HalbachCassette):
                 cpp_list_cassettes.append(cassettes._cppobj)
             elif isinstance(cassettes, idcpp.HalbachCassette):
                 cpp_list_cassettes.append(cassettes)
             else:
-                raise HalbachCassetteException("Invalid argument for IDModel constructor")
+                raise InsertionDeviceException("Invalid argument for IDModel constructor")
             cpp_vector_cassettes  = idcpp.CppVectorHalbachCassette()
             for c in cpp_list_cassettes:
                 cpp_vector_cassettes.push_back(c)
@@ -55,7 +60,7 @@ class IDModel(object):
 
     def plot(self, nr_periods=1, block_color='blue', alpha=0.1, arrow_color='black', arrow_width=3):
         if nr_periods > self.nr_periods:
-            raise HalbachCassetteException("The number of periods should be less or equal the number of periods of the insertion device")
+            raise InsertionDeviceException("The number of periods should be less or equal the number of periods of the insertion device")
 
         is_interactive = plt.isinteractive()
         plt.interactive = False
@@ -63,11 +68,11 @@ class IDModel(object):
         ax =  fig.add_subplot(111, projection='3d')
 
         for i in range(self._cppobj.cassettes.size()):
-            c = HalbachCassette(halbachcassette=self._cppobj.cassettes.get_item(i))
+            c = cassette.HalbachCassette(halbachcassette=self._cppobj.cassettes.get_item(i))
             N = self._cppobj.cassettes.get_item(0).get_number_of_blocks_per_period()
             for i in range(N*nr_periods):
                 cpp_block = c.get_item(i)
-                block = Block(block=cpp_block)
+                block = cassette.Block(block=cpp_block)
                 mag = block.mag
                 pos = 1000*block.pos
                 dim = 1000*block.dim
@@ -128,11 +133,16 @@ class EPU(IDModel):
             elif isinstance(epu, idcpp.InsertionDevice):
                 self._cppobj = idcpp.InsertionDevice(epu)
             else:
-                raise HalbachCassetteException("Invalid argument for EPU constructor")
-            if isinstance(block, Block): block = block._cppobj
+                raise InsertionDeviceException("Invalid argument for EPU constructor")
         else:
             insertiondevice_cpp = idcpp.InsertionDevice()
-            idcpp.create_epu(block, nr_periods, magnetic_gap, cassette_separation, block_separation, phase_csd, phase_cie, insertiondevice_cpp)
+            if isinstance(block, cassette.Block):
+                cpp_block = block._cppobj
+            elif isinstance(block, idcpp.Block):
+                cpp_block = block
+            else:
+                raise InsertionDeviceException("Invalid argument for EPU constructor")
+            idcpp.create_epu(cpp_block, nr_periods, magnetic_gap, cassette_separation, block_separation, phase_csd, phase_cie, insertiondevice_cpp)
             self._cppobj = insertiondevice_cpp
 
     @property
@@ -168,11 +178,16 @@ class DELTA(IDModel):
             elif isinstance(delta, idcpp.InsertionDevice):
                 self._cppobj = idcpp.InsertionDevice(delta)
             else:
-                raise HalbachCassetteException("Invalid argument for DELTA constructor")
+                raise InsertionDeviceException("Invalid argument for DELTA constructor")
         else:
-            if isinstance(block, Block): block = block._cppobj
+            if isinstance(block, cassette.Block):
+                cpp_block = block._cppobj
+            elif isinstance(block, idcpp.Block):
+                cpp_block = block
+            else:
+                raise InsertionDeviceException("Invalid argument for DELTA constructor")
             insertiondevice_cpp = idcpp.InsertionDevice()
-            idcpp.create_delta(block, nr_periods, magnetic_gap, cassette_separation, block_separation, phase_csd, phase_cie, insertiondevice_cpp)
+            idcpp.create_delta(cpp_block, nr_periods, magnetic_gap, cassette_separation, block_separation, phase_csd, phase_cie, insertiondevice_cpp)
             self._cppobj = insertiondevice_cpp
 
     @property

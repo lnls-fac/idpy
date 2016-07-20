@@ -46,23 +46,81 @@ class Mask(object):
 
 class KickMap(object):
 
-    def __init__(self, id_length=None, x=None, y=None, kick_x=None, kick_y=None, filename=None):
-        if filename is not None:
-            id_length, x, y, kick_x, kick_y = self._read_from_file(filename)
-        else:
-            self.id_length = id_length
-            self.x = x
-            self.y = y
-            self.kick_x = kick_x
-            self.kick_y = kick_y
-        cpp_x = idcpp.CppDoubleVector(self.x)
-        cpp_y = idcpp.CppDoubleVector(self.y)
-        cpp_kick_x = utils._matrix_to_CppDoubleVectorVector(self.kick_x)
-        cpp_kick_y = utils._matrix_to_CppDoubleVectorVector(self.kick_y)
+    def __init__(self, id_length=None, x=None, y=None, kick_x=None, kick_y=None):
+        self._id_length = id_length
+        self._x = x
+        self._y = y
+        self._kick_x = kick_x
+        self._kick_y = kick_y
+        cpp_x = idcpp.CppDoubleVector(self._x)
+        cpp_y = idcpp.CppDoubleVector(self._y)
+        cpp_kick_x = utils._matrix_to_CppDoubleVectorVector(self._kick_x)
+        cpp_kick_y = utils._matrix_to_CppDoubleVectorVector(self._kick_y)
         self._cppobj = idcpp.KickMap(id_length, cpp_x, cpp_y, cpp_kick_x, cpp_kick_y)
 
+    @property
+    def id_length(self):
+        return self._id_length
+
+    @property
+    def x(self):
+        return self._x
+
+    @property
+    def y(self):
+        return self._y
+
+    @property
+    def kick_x(self):
+        return self._kick_x
+
+    @property
+    def kick_y(self):
+        return self._kick_y
+
+    def write_to_file(self, filename):
+        f = open(filename, 'w')
+        print("# KICKMAP", file=f)
+        print("# Author: Luana N. P. Vilela @ LNLS, Date: ", file=f)
+        print("# ID Length [m]", file=f)
+        print(self.id_length, file=f)
+        print("# Number of Horizontal Points",file=f)
+        print(len(self.x), file=f)
+        print("# Number of Vertical Points",file=f)
+        print(len(self.y), file=f)
+
+        print("# Horizontal KickTable in T2m2", file=f)
+        print("START", file=f)
+        print(' '*13, end ='', file=f)
+        for j in range(len(self.x)):
+            print('%+e'%self.x[j], end=' ', file=f)
+        print('\n', end='', file=f)
+        for i in range(len(self.y)):
+            print('%+e'%self.y[i], end=' ', file=f)
+            for j in range(len(self.x)):
+                if numpy.isnan(self.kick_x[i,j]):
+                    print('%+e'%self.kick_x[i,j] + ' '*9, end=' ', file=f)
+                else:
+                    print('%+e'%self.kick_x[i,j], end=' ', file=f)
+            print('\n', end='', file =f)
+
+        print("# Vertical KickTable in T2m2", file=f)
+        print("START", file=f)
+        print(' '*14, end ='', file=f)
+        for j in range(len(self.x)):
+            print('%+e'%self.x[j], end=' ', file=f)
+        print('\n', end='', file=f)
+        for i in range(len(self.y)):
+            print('%+e'%self.y[i], end=' ', file=f)
+            for j in range(len(self.x)):
+                if numpy.isnan(self.kick_y[i,j]):
+                    print('%+e'%self.kick_y[i,j] + ' '*9, end=' ', file=f)
+                else:
+                    print('%+e'%self.kick_y[i,j], end=' ', file=f)
+            print('\n', end='', file =f)
+
     @staticmethod
-    def _read_from_file(filename):
+    def read_from_file(filename):
         with open(filename, encoding='latin-1') as f:
             lines = [line.strip() for line in f]
         lines = [line for line in lines if len(line)!=0]
@@ -83,54 +141,16 @@ class KickMap(object):
         kick_x = ykx[:,1:]
         kick_y = yky[:,1:]
 
-        return id_length, x, y, kick_x, kick_y
+        kickmap = KickMap(id_length, x, y, kick_x, kick_y)
+        return kickmap
 
     @staticmethod
     def pass_through_mask(input_filename, output_filename, mask):
-        id_length, x, y, kick_x, kick_y = KickMap._read_from_file(input_filename)
-        for i in range(len(y)):
-            for j in range(len(x)):
-                pos = [x[j], y[i], 0.0]
+        kickmap = KickMap.read_from_file(input_filename)
+        for i in range(len(kickmap.y)):
+            for j in range(len(kickmap.x)):
+                pos = [kickmap.x[j], kickmap.y[i], 0.0]
                 if not mask.is_inside(pos):
-                    kick_x[i,j] = numpy.nan
-                    kick_y[i,j] = numpy.nan
-
-        f = open(output_filename, 'w')
-        print("# KICKMAP", file=f)
-        print("# Author: Luana N. P. Vilela @ LNLS, Date: ", file=f)
-        print("# ID Length [m]", file=f)
-        print(id_length, file=f)
-        print("# Number of Horizontal Points",file=f)
-        print(len(x), file=f)
-        print("# Number of Vertical Points",file=f)
-        print(len(y), file=f)
-
-        print("# Horizontal KickTable in T2m2", file=f)
-        print("START", file=f)
-        print(' '*13, end ='', file=f)
-        for j in range(len(x)):
-            print('%+e'%x[j], end=' ', file=f)
-        print('\n', end='', file=f)
-        for i in range(len(y)):
-            print('%+e'%y[i], end=' ', file=f)
-            for j in range(len(x)):
-                if numpy.isnan(kick_x[i,j]):
-                    print('%+e'%kick_x[i,j] + ' '*9, end=' ', file=f)
-                else:
-                    print('%+e'%kick_x[i,j], end=' ', file=f)
-            print('\n', end='', file =f)
-
-        print("# Vertical KickTable in T2m2", file=f)
-        print("START", file=f)
-        print(' '*14, end ='', file=f)
-        for j in range(len(x)):
-            print('%+e'%x[j], end=' ', file=f)
-        print('\n', end='', file=f)
-        for i in range(len(y)):
-            print('%+e'%y[i], end=' ', file=f)
-            for j in range(len(x)):
-                if numpy.isnan(kick_y[i,j]):
-                    print('%+e'%kick_y[i,j] + ' '*9, end=' ', file=f)
-                else:
-                    print('%+e'%kick_y[i,j], end=' ', file=f)
-            print('\n', end='', file =f)
+                    kickmap.kick_x[i,j] = numpy.nan
+                    kickmap.kick_y[i,j] = numpy.nan
+        kickmap.write_to_file(output_filename)
