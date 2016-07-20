@@ -144,22 +144,26 @@ class EPU(IDModel):
                 raise InsertionDeviceException("Invalid argument for EPU constructor")
             idcpp.create_epu(cpp_block, nr_periods, magnetic_gap, cassette_separation, block_separation, phase_csd, phase_cie, insertiondevice_cpp)
             self._cppobj = insertiondevice_cpp
+        self._csd = cassette.HalbachCassette(halbachcassette=self._cppobj.cassettes.get_item(0))
+        self._cse = cassette.HalbachCassette(halbachcassette=self._cppobj.cassettes.get_item(1))
+        self._cid = cassette.HalbachCassette(halbachcassette=self._cppobj.cassettes.get_item(2))
+        self._cie = cassette.HalbachCassette(halbachcassette=self._cppobj.cassettes.get_item(3))
 
     @property
     def csd(self):
-        return self._cppobj.cassettes.get_item(0)
+        return self._csd
 
     @property
     def cse(self):
-        return self._cppobj.cassettes.get_item(1)
+        return self._cse
 
     @property
     def cid(self):
-        return self._cppobj.cassettes.get_item(2)
+        return self._cid
 
     @property
     def cie(self):
-        return self._cppobj.cassettes.get_item(3)
+        return self._cie
 
     def set_phase_csd(self, phase):
         self.csd.set_zcenter(phase)
@@ -189,22 +193,26 @@ class DELTA(IDModel):
             insertiondevice_cpp = idcpp.InsertionDevice()
             idcpp.create_delta(cpp_block, nr_periods, magnetic_gap, cassette_separation, block_separation, phase_csd, phase_cie, insertiondevice_cpp)
             self._cppobj = insertiondevice_cpp
+        self._cs = cassette.HalbachCassette(halbachcassette=self._cppobj.cassettes.get_item(0))
+        self._cd = cassette.HalbachCassette(halbachcassette=self._cppobj.cassettes.get_item(1))
+        self._ci = cassette.HalbachCassette(halbachcassette=self._cppobj.cassettes.get_item(2))
+        self._ce = cassette.HalbachCassette(halbachcassette=self._cppobj.cassettes.get_item(3))
 
     @property
     def cs(self):
-        return self._cppobj.cassettes.get_item(0)
+        return self._cs
 
     @property
     def cd(self):
-        return self._cppobj.cassettes.get_item(1)
+        return self._cd
 
     @property
     def ci(self):
-        return self._cppobj.cassettes.get_item(2)
+        return self._ci
 
     @property
     def ce(self):
-        return self._cppobj.cassettes.get_item(3)
+        return self._ce
 
     def set_phase_cd(self, phase):
         self.cd.set_zcenter(phase)

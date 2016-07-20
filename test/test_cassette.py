@@ -355,13 +355,13 @@ class TestHalbachCassette(unittest.TestCase):
         self.assertEqual(block_pos[1], -5)
         self.assertEqual(block_pos[2], 8 - dim[2]/2)
 
-        cassette.first_block_pos = [0,0,0]
+        cassette.first_block_pos = [10,10,10]
         center_pos = cassette.center_pos
         block_pos = cassette.first_block_pos
-        self.assertEqual(block_pos[0], 0)
-        self.assertEqual(block_pos[1], 0)
-        self.assertEqual(block_pos[2], 0)
-        self.assertEqual(center_pos[2], 0 + dim[2]/2)
+        self.assertEqual(block_pos[0], 10)
+        self.assertEqual(block_pos[1], 10)
+        self.assertEqual(block_pos[2], 10)
+        self.assertEqual(center_pos[2], 10 + dim[2]/2)
 
 
     def test_field_vertical_direction(self):

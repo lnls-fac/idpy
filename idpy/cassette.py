@@ -222,6 +222,16 @@ class HalbachCassette(object):
         pos_cpp = utils._vector_to_CppVector3D(pos)
         self._cppobj.set_first_block_pos(pos_cpp)
 
+    @property
+    def last_block_pos(self):
+        cpp_pos = self._cppobj.get_last_block_pos()
+        return utils._CppVector3D_to_vector(cpp_pos)
+
+    @last_block_pos.setter
+    def last_block_pos(self, pos):
+        pos_cpp = utils._vector_to_CppVector3D(pos)
+        self._cppobj.set_last_block_pos(pos_cpp)
+
     def set_horizontal_pos(self, h_pos):
         self._cppobj.set_xcenter(h_pos)
 
