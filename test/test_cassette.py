@@ -105,41 +105,41 @@ def get_Qyz(r, pos, dim):
     return Qyz
 
 
-class TestSubblock(unittest.TestCase):
+class TestSubVolume(unittest.TestCase):
 
     def test_dimension(self):
-        subblock = idpy.cassette.Subblock(dim=[1,2,3])
-        cpp_dim = subblock._cppobj.dim
-        for i in range(len(subblock.dim)):
-            self.assertEqual(subblock.dim[i], idpy.utils._CppVector3D_to_vector(cpp_dim)[i])
+        subvolume = idpy.cassette.SubVolume(dim=[1,2,3])
+        cpp_dim = subvolume._cppobj.dim
+        for i in range(len(subvolume.dim)):
+            self.assertEqual(subvolume.dim[i], idpy.utils._CppVector3D_to_vector(cpp_dim)[i])
 
     def test_dimension_setter(self):
-        subblock = idpy.cassette.Subblock(dim=[1,2,3])
-        subblock.dim = [0,0,0]
-        cpp_dim = subblock._cppobj.dim
-        for i in range(len(subblock.dim)):
-            self.assertEqual(subblock.dim[i], idpy.utils._CppVector3D_to_vector(cpp_dim)[i])
+        subvolume = idpy.cassette.SubVolume(dim=[1,2,3])
+        subvolume.dim = [0,0,0]
+        cpp_dim = subvolume._cppobj.dim
+        for i in range(len(subvolume.dim)):
+            self.assertEqual(subvolume.dim[i], idpy.utils._CppVector3D_to_vector(cpp_dim)[i])
 
     def test_position(self):
-        subblock = idpy.cassette.Subblock(dim=[1,2,3], pos=[4,5,6])
-        cpp_pos = subblock._cppobj.pos
-        for i in range(len(subblock.pos)):
-            self.assertEqual(subblock.pos[i], idpy.utils._CppVector3D_to_vector(cpp_pos)[i])
+        subvolume = idpy.cassette.SubVolume(dim=[1,2,3], pos=[4,5,6])
+        cpp_pos = subvolume._cppobj.pos
+        for i in range(len(subvolume.pos)):
+            self.assertEqual(subvolume.pos[i], idpy.utils._CppVector3D_to_vector(cpp_pos)[i])
 
     def test_position_setter(self):
-        subblock = idpy.cassette.Subblock(dim=[1,2,3], pos=[4,5,6])
-        subblock.pos = [0,0,0]
-        cpp_pos = subblock._cppobj.pos
-        for i in range(len(subblock.pos)):
-            self.assertEqual(subblock.pos[i], idpy.utils._CppVector3D_to_vector(cpp_pos)[i])
+        subvolume = idpy.cassette.SubVolume(dim=[1,2,3], pos=[4,5,6])
+        subvolume.pos = [0,0,0]
+        cpp_pos = subvolume._cppobj.pos
+        for i in range(len(subvolume.pos)):
+            self.assertEqual(subvolume.pos[i], idpy.utils._CppVector3D_to_vector(cpp_pos)[i])
 
     def test_get_matrix(self):
         places = 15
         dim = [1,2,3]
         pos = [4,5,6]
-        subblock = idpy.cassette.Subblock(dim, pos)
+        subvolume = idpy.cassette.SubVolume(dim, pos)
         r = [1,1,1]
-        matrix = subblock.get_matrix(r)
+        matrix = subvolume.get_matrix(r)
         self.assertAlmostEqual(matrix[0][0], -get_Qxx(r, pos, dim), places=places)
         self.assertAlmostEqual(matrix[1][1], -get_Qyy(r, pos, dim), places=places)
         self.assertAlmostEqual(matrix[2][2], -get_Qzz(r, pos, dim), places=places)
@@ -153,12 +153,12 @@ class TestSubblock(unittest.TestCase):
     def test_copy(self):
         dim = [1,2,3]
         pos = [4,5,6]
-        subblock = idpy.cassette.Subblock(dim, pos)
-        new_subblock = idpy.cassette.Subblock(subblock=subblock)
-        new_subblock.dim = [10,10,10]
-        self.assertEqual(subblock.dim[0], 1)
-        self.assertEqual(subblock.dim[1], 2)
-        self.assertEqual(subblock.dim[2], 3)
+        subvolume = idpy.cassette.SubVolume(dim, pos)
+        new_subvolume = idpy.cassette.SubVolume(subvolume=subvolume)
+        new_subvolume.dim = [10,10,10]
+        self.assertEqual(subvolume.dim[0], 1)
+        self.assertEqual(subvolume.dim[1], 2)
+        self.assertEqual(subvolume.dim[2], 3)
 
 
 class TestBlock(unittest.TestCase):
@@ -324,7 +324,7 @@ class TestHalbachCassette(unittest.TestCase):
         self.cassette_rectangle = idpy.cassette.HalbachCassette(self.block_rectangle, rot, nr_periods)
 
     def test_block_attributes(self):
-        block = self.cassette_cube.genblock
+        block = self.cassette_cube.get_item(0)
         self.assertIsInstance(block, idpy.cassette.Block)
         self.assertEqual(block.mag[0], self.block_cube.mag[0])
         self.assertEqual(block.mag[1], self.block_cube.mag[1])
@@ -340,29 +340,17 @@ class TestHalbachCassette(unittest.TestCase):
         cassette = idpy.cassette.HalbachCassette(halbachcassette=self.cassette_cube)
         dim = cassette.get_dim()
 
-        cassette.set_horizontal_pos(100)
-        cassette.set_vertical_pos(-5)
-        cassette.set_longitudinal_pos(8)
+        cassette.set_xcenter(100)
+        cassette.set_ycenter(-5)
+        cassette.set_zcenter(8)
         center_pos = cassette.center_pos
-        block_pos = cassette.first_block_pos
-        self.assertEqual(cassette.genblock.pos[0], 100)
-        self.assertEqual(cassette.genblock.pos[1], -5)
-        self.assertEqual(cassette.genblock.pos[2], 8 - dim[2]/2)
+        block_pos = cassette.get_item(0).pos
+        self.assertEqual(cassette.get_item(0).pos[0], 100)
+        self.assertEqual(cassette.get_item(0).pos[1], -5)
+        self.assertEqual(cassette.get_item(0).pos[2], 8 - dim[2]/2)
         self.assertEqual(center_pos[0], 100)
         self.assertEqual(center_pos[1], -5)
         self.assertEqual(center_pos[2], 8)
-        self.assertEqual(block_pos[0], 100)
-        self.assertEqual(block_pos[1], -5)
-        self.assertEqual(block_pos[2], 8 - dim[2]/2)
-
-        cassette.first_block_pos = [10,10,10]
-        center_pos = cassette.center_pos
-        block_pos = cassette.first_block_pos
-        self.assertEqual(block_pos[0], 10)
-        self.assertEqual(block_pos[1], 10)
-        self.assertEqual(block_pos[2], 10)
-        self.assertEqual(center_pos[2], 10 + dim[2]/2)
-
 
     def test_field_vertical_direction(self):
         # Compared with Radia results
@@ -558,7 +546,8 @@ class TestHalbachCassette(unittest.TestCase):
         places = 8
 
         pos = [0.01,0,0]
-        self.cassette_rectangle.first_block_pos = pos
+        block_pos = self.cassette_rectangle.get_item(0).pos
+        self.cassette_rectangle.shift_pos(pos - block_pos)
 
         x = 0.05
         y = 0.05
@@ -601,8 +590,9 @@ class TestHalbachCassette(unittest.TestCase):
         places = 8
 
         pos = [0,-0.02, 0]
-        self.cassette_rectangle.first_block_pos = pos
-
+        block_pos = self.cassette_rectangle.get_item(0).pos
+        self.cassette_rectangle.shift_pos(pos - block_pos)
+        
         x = 0.04
         y = 0.04
         z = [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8]
@@ -676,8 +666,8 @@ class TestHalbachCassette(unittest.TestCase):
             self.assertAlmostEqual(field[2], Bz_radia[i], places=places)
 
 
-def subblock_suite():
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestSubblock)
+def subvolume_suite():
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestSubVolume)
     return suite
 
 def block_suite():
@@ -690,7 +680,7 @@ def halbach_cassette_suite():
 
 def get_suite():
     suite_list = []
-    suite_list.append(subblock_suite())
+    suite_list.append(subvolume_suite())
     suite_list.append(block_suite())
     suite_list.append(halbach_cassette_suite())
     return unittest.TestSuite(suite_list)

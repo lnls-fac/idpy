@@ -1,14 +1,55 @@
 
+import numpy as _numpy
+import idcpp as _idcpp
+import idpy.utils as _utils
 
-import numpy
-import idcpp
-import idpy.utils as utils
+
+class Magnet(object):
+
+    def field(self, pos):
+        if isinstance(pos[0], (float, int)):
+            cpp_pos = _utils._vector_to_CppVector3D(pos)
+            cpp_field = self._cppobj.field(cpp_pos)
+            field = _utils._CppVector3D_to_vector(cpp_field)
+        else:
+            cpp_pos = _utils._matrix_to_CppVectorVector3D(pos)
+            cpp_field = self._cppobj.field_vector(cpp_pos)
+            field = _utils._CppVectorVector3D_to_matrix(cpp_field)
+        return field
+
+    @property
+    def xmin(self):
+        return self._cppobj.get_xmin()
+
+    @property
+    def xmax(self):
+        return self._cppobj.get_xmax()
+
+    @property
+    def ymin(self):
+        return self._cppobj.get_ymin()
+
+    @property
+    def ymax(self):
+        return self._cppobj.get_ymax()
+
+    @property
+    def zmin(self):
+        return self._cppobj.get_zmin()
+
+    @property
+    def zmax(self):
+        return self._cppobj.get_zmax()
+
+    @property
+    def physical_length(self):
+        return self._cppobj.get_physical_length()
 
 
 class Grid(object):
 
     def __init__(self, nx, ny, xmin, xmax, ymin, ymax):
-        self._cppobj = idcpp.Grid(nx, ny, xmin, xmax, ymin, ymax)
+        self._cppobj = _idcpp.Grid(nx, ny, xmin, xmax, ymin, ymax)
 
     @property
     def nx(self):
@@ -31,52 +72,60 @@ class Grid(object):
 
 class Mask(object):
 
+    valid_shapes = ["ELLIPSE", "RECTANGLE", "DIAMOND", "TABLE", "NONE"]
+
     def __init__(self, shape=None, width=0.0, height=0.0, filename=None):
         if shape is not None:
-            self._cppobj = idcpp.Mask(shape, width, height)
+            if shape.upper() not in valid_shapes:
+                raise Exception("Invalid shape")
+            else:
+                self._cppobj = _idcpp.Mask(shape.upper(), width, height)
         elif filename is not None:
-            self._cppobj = idcpp.Mask(filename)
+            self._cppobj = _idcpp.Mask(filename)
         elif shape is None and filename is None:
-            self._cppobj = idcpp.Mask("NONE")
+            self._cppobj = _idcpp.Mask("NONE", width, height)
 
     def is_inside(self, pos):
-        cpp_pos = utils._vector_to_CppVector3D(pos)
+        cpp_pos = _utils._vector_to_CppVector3D(pos)
         return self._cppobj.is_inside(cpp_pos)
 
 
 class KickMap(object):
 
-    def __init__(self, id_length=None, x=None, y=None, kick_x=None, kick_y=None):
-        self._id_length = id_length
-        self._x = x
-        self._y = y
-        self._kick_x = kick_x
-        self._kick_y = kick_y
-        cpp_x = idcpp.CppDoubleVector(self._x)
-        cpp_y = idcpp.CppDoubleVector(self._y)
-        cpp_kick_x = utils._matrix_to_CppDoubleVectorVector(self._kick_x)
-        cpp_kick_y = utils._matrix_to_CppDoubleVectorVector(self._kick_y)
-        self._cppobj = idcpp.KickMap(id_length, cpp_x, cpp_y, cpp_kick_x, cpp_kick_y)
+    def __init__(self, id_length=None, x=None, y=None, kick_x=None, kick_y=None, kickmap=None):
+        if kickmap is not None:
+            if isinstance(kickmap, KickMap):
+                self._cppobj = _idcpp.KickMap(kickmap._cppobj)
+            elif isinstance(kickmap, _idcpp.KickMap):
+                self._cppobj = _idcpp.KickMap(kickmap)
+            else:
+                raise Exception("Invalid argument for KickMap constructor")
+        else:
+            cpp_x = _idcpp.CppDoubleVector(x)
+            cpp_y = _idcpp.CppDoubleVector(y)
+            cpp_kick_x = _utils._matrix_to_CppDoubleVectorVector(kick_x)
+            cpp_kick_y = _utils._matrix_to_CppDoubleVectorVector(kick_y)
+            self._cppobj = _idcpp.KickMap(id_length, cpp_x, cpp_y, cpp_kick_x, cpp_kick_y)
 
     @property
     def id_length(self):
-        return self._id_length
+        return self._cppobj.id_length
 
     @property
     def x(self):
-        return self._x
+        return list(self._cppobj.x)
 
     @property
     def y(self):
-        return self._y
+        return list(self._cppobj.y)
 
     @property
     def kick_x(self):
-        return self._kick_x
+        return _utils._CppDoubleVectorVector_to_matrix(self._cppobj.kick_x)
 
     @property
     def kick_y(self):
-        return self._kick_y
+        return _utils._CppDoubleVectorVector_to_matrix(self._cppobj.kick_y)
 
     def write_to_file(self, filename):
         f = open(filename, 'w')
@@ -98,7 +147,7 @@ class KickMap(object):
         for i in range(len(self.y)):
             print('%+e'%self.y[i], end=' ', file=f)
             for j in range(len(self.x)):
-                if numpy.isnan(self.kick_x[i,j]):
+                if _numpy.isnan(self.kick_x[i,j]):
                     print('%+e'%self.kick_x[i,j] + ' '*9, end=' ', file=f)
                 else:
                     print('%+e'%self.kick_x[i,j], end=' ', file=f)
@@ -113,7 +162,7 @@ class KickMap(object):
         for i in range(len(self.y)):
             print('%+e'%self.y[i], end=' ', file=f)
             for j in range(len(self.x)):
-                if numpy.isnan(self.kick_y[i,j]):
+                if _numpy.isnan(self.kick_y[i,j]):
                     print('%+e'%self.kick_y[i,j] + ' '*9, end=' ', file=f)
                 else:
                     print('%+e'%self.kick_y[i,j], end=' ', file=f)
@@ -128,14 +177,14 @@ class KickMap(object):
         id_length = float(lines[3])
         nx = int(lines[5])
         ny = int(lines[7])
-        x = numpy.array([float(l) for l in lines[10].split()])
+        x = _numpy.array([float(l) for l in lines[10].split()])
         ykx = []
         yky = []
         for i in range(ny):
             ykx.append([float(l) for l in lines[i+11].split()])
             yky.append([float(l) for l in lines[i+14+ny].split()])
-        ykx = numpy.array(ykx)
-        yky = numpy.array(yky)
+        ykx = _numpy.array(ykx)
+        yky = _numpy.array(yky)
 
         y = ykx[:,0]
         kick_x = ykx[:,1:]
@@ -151,6 +200,6 @@ class KickMap(object):
             for j in range(len(kickmap.x)):
                 pos = [kickmap.x[j], kickmap.y[i], 0.0]
                 if not mask.is_inside(pos):
-                    kickmap.kick_x[i,j] = numpy.nan
-                    kickmap.kick_y[i,j] = numpy.nan
+                    kickmap.kick_x[i,j] = _numpy.nan
+                    kickmap.kick_y[i,j] = _numpy.nan
         kickmap.write_to_file(output_filename)

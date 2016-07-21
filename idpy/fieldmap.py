@@ -1,8 +1,8 @@
 
-import numpy
-import matplotlib.pyplot as plt
-import idcpp
-import idpy.utils as utils
+import numpy as _numpy
+import matplotlib.pyplot as _plt
+import idcpp as _idcpp
+import idpy.utils as _utils
 
 
 class FieldMapException(Exception):
@@ -17,8 +17,8 @@ class FieldMap(object):
             self._filename_list = [filename_list]
         else:
             self._filename_list = filename_list
-        cpp_filename_list = idcpp.CppStringVector(self._filename_list)
-        self._cppobj = idcpp.FieldMapContainer(cpp_filename_list, fieldmap3D)
+        cpp_filename_list = _idcpp.CppStringVector(self._filename_list)
+        self._cppobj = _idcpp.FieldMapContainer(cpp_filename_list, fieldmap3D)
 
     @property
     def filename_list(self):
@@ -63,13 +63,13 @@ class FieldMap(object):
     def field(self, pos):
         self._check_limits(pos)
         if isinstance(pos[0], (float, int)):
-            cpp_pos = utils._vector_to_CppVector3D(pos)
+            cpp_pos = _utils._vector_to_CppVector3D(pos)
             cpp_field = self._cppobj.field(cpp_pos)
-            field = utils._CppVector3D_to_vector(cpp_field)
+            field = _utils._CppVector3D_to_vector(cpp_field)
         else:
-            cpp_pos = utils._matrix_to_CppVectorVector3D(pos)
+            cpp_pos = _utils._matrix_to_CppVectorVector3D(pos)
             cpp_field = self._cppobj.field(cpp_pos)
-            field = utils._CppVectorVector3D_to_matrix(cpp_field)
+            field = _utils._CppVectorVector3D_to_matrix(cpp_field)
         return field
 
     def _field_profile(self, field_component, direction, pos, x=0.0, y=0.0, z=0.0):
@@ -89,64 +89,64 @@ class FieldMap(object):
             field_profile_y.append(field[1])
             field_profile_z.append(field[2])
         if field_component == "x":
-            return numpy.array([pos, field_profile_x])
+            return _numpy.array([pos, field_profile_x])
         elif field_component == "y":
-            return numpy.array([pos, field_profile_y])
+            return _numpy.array([pos, field_profile_y])
         elif field_component == "z":
-            return numpy.array([pos, field_profile_z])
+            return _numpy.array([pos, field_profile_z])
         else:
             raise FieldMapException("Invalid value for field component.")
 
     def bx_x(self, y=0.0, z=0.0, mm=False, nrpts = 1000):
-        pos = numpy.linspace(self.x_min, self.x_max, nrpts)
+        pos = _numpy.linspace(self.x_min, self.x_max, nrpts)
         field_profile = self._field_profile("x", "x", pos, y=y, z=z)
         if mm: field_profile[0] = field_profile[0]*1000.0
         return field_profile
 
     def bx_y(self, x=0.0, z=0.0, mm=False, nrpts = 1000):
-        pos = numpy.linspace(self.y_min, self.y_max, nrpts)
+        pos = _numpy.linspace(self.y_min, self.y_max, nrpts)
         field_profile = self._field_profile("x", "y", pos, x=x, z=z)
         if mm: field_profile[0] = field_profile[0]*1000.0
         return field_profile
 
     def bx_z(self, x=0.0, y=0.0, mm=False, nrpts = 10000):
-        pos = numpy.linspace(self.z_min, self.z_max, nrpts)
+        pos = _numpy.linspace(self.z_min, self.z_max, nrpts)
         field_profile = self._field_profile("x", "z", pos, x=x, y=y)
         if mm: field_profile[0] = field_profile[0]*1000.0
         return field_profile
 
     def by_x(self, y=0.0, z=0.0, mm=False, nrpts = 1000):
-        pos = numpy.linspace(self.x_min, self.x_max, nrpts)
+        pos = _numpy.linspace(self.x_min, self.x_max, nrpts)
         field_profile = self._field_profile("y", "x", pos, y=y, z=z)
         if mm: field_profile[0] = field_profile[0]*1000.0
         return field_profile
 
     def by_y(self, x=0.0, z=0.0, mm=False, nrpts = 1000):
-        pos = numpy.linspace(self.y_min, self.y_max, nrpts)
+        pos = _numpy.linspace(self.y_min, self.y_max, nrpts)
         field_profile = self._field_profile("y", "y", pos, x=x, z=z)
         if mm: field_profile[0] = field_profile[0]*1000.0
         return field_profile
 
     def by_z(self, x=0.0, y=0.0, mm=False, nrpts = 10000):
-        pos = numpy.linspace(self.z_min, self.z_max, nrpts)
+        pos = _numpy.linspace(self.z_min, self.z_max, nrpts)
         field_profile = self._field_profile("y", "z", pos, x=x, y=y)
         if mm: field_profile[0] = field_profile[0]*1000.0
         return field_profile
 
     def bz_x(self, y=0.0, z=0.0, mm=False, nrpts = 1000):
-        pos = numpy.linspace(self.x_min, self.x_max, nrpts)
+        pos = _numpy.linspace(self.x_min, self.x_max, nrpts)
         field_profile = self._field_profile("z", "x", pos, y=y, z=z)
         if mm: field_profile[0] = field_profile[0]*1000.0
         return field_profile
 
     def bz_y(self, x=0.0, z=0.0, mm=False, nrpts = 1000):
-        pos = numpy.linspace(self.y_min, self.y_max, nrpts)
+        pos = _numpy.linspace(self.y_min, self.y_max, nrpts)
         field_profile = self._field_profile("z", "y", pos, x=x, z=z)
         if mm: field_profile[0] = field_profile[0]*1000.0
         return field_profile
 
     def bz_z(self, x=0.0, y=0.0, mm=False, nrpts = 10000):
-        pos = numpy.linspace(self.z_min, self.z_max, nrpts)
+        pos = _numpy.linspace(self.z_min, self.z_max, nrpts)
         field_profile = self._field_profile("z", "z", pos, x=x, y=y)
         if mm: field_profile[0] = field_profile[0]*1000.0
         return field_profile
@@ -164,40 +164,40 @@ class FieldMap(object):
         pdf_names = ''
 
         pdf_names = pdf_names + 'bx_x.pdf' + ' '
-        _plt.plot(*bx_x), _plt.xlabel('x [mm]'), _plt.ylabel('Bx [T]')
-        _plt.title('Horizontal Field'), _plt.savefig('bx_x.pdf', bbox_inches='tight'), _plt.close(), _plt.figure()
+        __plt.plot(*bx_x), __plt.xlabel('x [mm]'), __plt.ylabel('Bx [T]')
+        __plt.title('Horizontal Field'), __plt.savefig('bx_x.pdf', bbox_inches='tight'), __plt.close(), __plt.figure()
 
         pdf_names = pdf_names + 'bx_y.pdf' + ' '
-        _plt.plot(*bx_y), _plt.xlabel('y [mm]'), _plt.ylabel('Bx [T]')
-        _plt.title('Horizontal Field'), _plt.savefig('bx_y.pdf', bbox_inches='tight'), _plt.close(), _plt.figure()
+        __plt.plot(*bx_y), __plt.xlabel('y [mm]'), __plt.ylabel('Bx [T]')
+        __plt.title('Horizontal Field'), __plt.savefig('bx_y.pdf', bbox_inches='tight'), __plt.close(), __plt.figure()
 
         pdf_names = pdf_names + 'bx_z.pdf' + ' '
-        _plt.plot(*bx_z), _plt.xlabel('z [mm]'), _plt.ylabel('Bx [T]')
-        _plt.title('Horizontal Field'), _plt.savefig('bx_z.pdf', bbox_inches='tight'), _plt.close(), _plt.figure()
+        __plt.plot(*bx_z), __plt.xlabel('z [mm]'), __plt.ylabel('Bx [T]')
+        __plt.title('Horizontal Field'), __plt.savefig('bx_z.pdf', bbox_inches='tight'), __plt.close(), __plt.figure()
 
         pdf_names = pdf_names + 'by_x.pdf' + ' '
-        _plt.plot(*by_x), _plt.xlabel('x [mm]'), _plt.ylabel('By [T]')
-        _plt.title('Vertical Field'), _plt.savefig('by_x.pdf', bbox_inches='tight'), _plt.close(), _plt.figure()
+        __plt.plot(*by_x), __plt.xlabel('x [mm]'), __plt.ylabel('By [T]')
+        __plt.title('Vertical Field'), __plt.savefig('by_x.pdf', bbox_inches='tight'), __plt.close(), __plt.figure()
 
         pdf_names = pdf_names + 'by_y.pdf' + ' '
-        _plt.plot(*by_y), _plt.xlabel('y [mm]'), _plt.ylabel('By [T]')
-        _plt.title('Vertical Field'), _plt.savefig('by_y.pdf', bbox_inches='tight'), _plt.close(), _plt.figure()
+        __plt.plot(*by_y), __plt.xlabel('y [mm]'), __plt.ylabel('By [T]')
+        __plt.title('Vertical Field'), __plt.savefig('by_y.pdf', bbox_inches='tight'), __plt.close(), __plt.figure()
 
         pdf_names = pdf_names + 'by_z.pdf' + ' '
-        _plt.plot(*by_z), _plt.xlabel('z [mm]'), _plt.ylabel('By [T]')
-        _plt.title('Vertical Field'), _plt.savefig('by_z.pdf', bbox_inches='tight'), _plt.close(), _plt.figure()
+        __plt.plot(*by_z), __plt.xlabel('z [mm]'), __plt.ylabel('By [T]')
+        __plt.title('Vertical Field'), __plt.savefig('by_z.pdf', bbox_inches='tight'), __plt.close(), __plt.figure()
 
         pdf_names = pdf_names + 'bz_x.pdf' + ' '
-        _plt.plot(*bz_x), _plt.xlabel('x [mm]'), _plt.ylabel('Bz [T]')
-        _plt.title('Longitudinal Field'), _plt.savefig('bz_x.pdf', bbox_inches='tight'), _plt.close(), _plt.figure()
+        __plt.plot(*bz_x), __plt.xlabel('x [mm]'), __plt.ylabel('Bz [T]')
+        __plt.title('Longitudinal Field'), __plt.savefig('bz_x.pdf', bbox_inches='tight'), __plt.close(), __plt.figure()
 
         pdf_names = pdf_names + 'bz_y.pdf' + ' '
-        _plt.plot(*bz_y), _plt.xlabel('y [mm]'), _plt.ylabel('Bz [T]')
-        _plt.title('Longitudinal Field'), _plt.savefig('bz_y.pdf', bbox_inches='tight'), _plt.close(), _plt.figure()
+        __plt.plot(*bz_y), __plt.xlabel('y [mm]'), __plt.ylabel('Bz [T]')
+        __plt.title('Longitudinal Field'), __plt.savefig('bz_y.pdf', bbox_inches='tight'), __plt.close(), __plt.figure()
 
         pdf_names = pdf_names + 'bz_z.pdf' + ' '
-        _plt.plot(*bz_z), _plt.xlabel('z [mm]'), _plt.ylabel('Bz [T]')
-        _plt.title('Longitudinal Field'), _plt.savefig('bz_z.pdf', bbox_inches='tight'), _plt.close()
+        __plt.plot(*bz_z), __plt.xlabel('z [mm]'), __plt.ylabel('Bz [T]')
+        __plt.title('Longitudinal Field'), __plt.savefig('bz_z.pdf', bbox_inches='tight'), __plt.close()
 
         join_pdf = 'pdfunite ' + pdf_names +  self.label + '_field_profile.pdf'
         rm_pdf = 'rm -rf ' + pdf_names
