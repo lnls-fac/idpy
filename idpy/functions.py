@@ -14,7 +14,7 @@ def calc_brho(energy):
     beta = _idcpp.doublep_value(beta_p)
     return brho, beta
 
-def runge_kutta(magnet, energy, step, r, p, mask=None, trajectory=False):
+def runge_kutta(magnet, energy, r, p, zmax, step, mask=None, trajectory_flag=False):
     brho, beta = calc_brho(energy)
 
     if isinstance(magnet, _auxiliary.Magnet):
@@ -38,18 +38,18 @@ def runge_kutta(magnet, energy, step, r, p, mask=None, trajectory=False):
     cpp_p = _utils._vector_to_CppVector3D(p)
     cpp_kick = _idcpp.CppVector3D()
 
-    if trajectory:
+    if trajectory_flag:
         cpp_trajectory = _idcpp.CppDoubleVectorVector()
-        _idcpp.runge_kutta(cpp_magnet, brho, beta, step, cpp_mask, cpp_r, cpp_p, cpp_kick, cpp_trajectory)
+        _idcpp.runge_kutta(cpp_magnet, energy, cpp_r, cpp_p, zmax, step, cpp_mask, cpp_trajectory)
         kick = _utils._CppVector3D_to_vector(cpp_kick)
         trajectory = _utils._CppDoubleVectorVector_to_matrix(trajectory)
-        return kick, trajectory
+        return trajectory
     else:
-        _idcpp.runge_kutta(cpp_magnet, brho, beta, step, cpp_mask, cpp_r, cpp_p, cpp_kick)
+        _idcpp.runge_kutta(cpp_magnet, energy, cpp_r, cpp_p, zmax, step, cpp_mask, cpp_kick)
         kick = _utils._CppVector3D_to_vector(cpp_kick)
         return kick
 
-def calc_kickmap(magnet, grid, energy, runge_kutta_step, mask=None):
+def calc_kickmap(magnet, energy, grid, zmin, zmax, rk_step, mask=None):
     if isinstance(magnet, _auxiliary.Magnet):
         cpp_magnet = magnet._cppobj
     elif isinstance(magnet, _idcpp.Magnet):
@@ -75,6 +75,6 @@ def calc_kickmap(magnet, grid, energy, runge_kutta_step, mask=None):
         cpp_mask = _auxiliary.Mask()._cppobj
 
     cpp_kickmap = _idcpp.KickMap()
-    _idcpp.calc_kickmap(cpp_magnet, cpp_grid, cpp_mask, energy, runge_kutta_step, cpp_kickmap)
+    _idcpp.calc_kickmap(cpp_magnet, energy, cpp_grid, zmin, zmax, rk_step, cpp_mask, cpp_kickmap)
     kickmap = _auxiliary.KickMap(kickmap=cpp_kickmap)
     return kickmap
