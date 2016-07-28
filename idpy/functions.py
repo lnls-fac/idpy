@@ -42,7 +42,7 @@ def runge_kutta(magnet, energy, r, p, zmax, step, mask=None, trajectory_flag=Fal
         cpp_trajectory = _idcpp.CppDoubleVectorVector()
         _idcpp.runge_kutta(cpp_magnet, energy, cpp_r, cpp_p, zmax, step, cpp_mask, cpp_trajectory)
         kick = _utils._CppVector3D_to_vector(cpp_kick)
-        trajectory = _utils._CppDoubleVectorVector_to_matrix(trajectory)
+        trajectory = _utils._CppDoubleVectorVector_to_matrix(cpp_trajectory)
         return trajectory
     else:
         _idcpp.runge_kutta(cpp_magnet, energy, cpp_r, cpp_p, zmax, step, cpp_mask, cpp_kick)
