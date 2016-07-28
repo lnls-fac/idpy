@@ -249,28 +249,16 @@ class TestBlock(unittest.TestCase):
         Qxy = get_Qxy(r, pos, dim)
         Qxz = get_Qxz(r, pos, dim)
         Qyz = get_Qyz(r, pos, dim)
-        if numpy.isnan(Qxx): self.assertTrue(numpy.isnan(matrix[0][0]))
-        else: self.assertAlmostEqual(matrix[0][0], -Qxx, places=places)
-        if numpy.isnan(Qyy): self.assertTrue(numpy.isnan(matrix[1][1]))
-        else: self.assertAlmostEqual(matrix[1][1], -Qyy, places=places)
-        if numpy.isnan(Qzz): self.assertTrue(numpy.isnan(matrix[2][2]))
-        else: self.assertAlmostEqual(matrix[2][2], -Qzz, places=places)
-        if numpy.isnan(Qxy):
-            self.assertTrue(numpy.isnan(matrix[0][1]))
-            self.assertTrue(numpy.isnan(matrix[1][0]))
-        else:
+        if not numpy.isnan(Qxx): self.assertAlmostEqual(matrix[0][0], -Qxx, places=places)
+        if not numpy.isnan(Qyy): self.assertAlmostEqual(matrix[1][1], -Qyy, places=places)
+        if not numpy.isnan(Qzz): self.assertAlmostEqual(matrix[2][2], -Qzz, places=places)
+        if not numpy.isnan(Qxy):
             self.assertAlmostEqual(matrix[0][1], -Qxy, places=places)
             self.assertAlmostEqual(matrix[1][0], -Qxy, places=places)
-        if numpy.isnan(Qxz):
-            self.assertTrue(numpy.isnan(matrix[0][2]))
-            self.assertTrue(numpy.isnan(matrix[2][0]))
-        else:
+        if not numpy.isnan(Qxz):
             self.assertAlmostEqual(matrix[0][2], -Qxz, places=places)
             self.assertAlmostEqual(matrix[2][0], -Qxz, places=places)
-        if numpy.isnan(Qyz):
-            self.assertTrue(numpy.isnan(matrix[1][2]))
-            self.assertTrue(numpy.isnan(matrix[2][1]))
-        else:
+        if not numpy.isnan(Qyz):
             self.assertAlmostEqual(matrix[1][2], -Qyz, places=places)
             self.assertAlmostEqual(matrix[2][1], -Qyz, places=places)
 
@@ -288,22 +276,13 @@ class TestBlock(unittest.TestCase):
         else: self.assertAlmostEqual(matrix[1][1], -Qyy, places=places)
         if numpy.isnan(Qzz): self.assertTrue(numpy.isnan(matrix[2][2]))
         else: self.assertAlmostEqual(matrix[2][2], -Qzz, places=places)
-        if numpy.isnan(Qxy):
-            self.assertTrue(numpy.isnan(matrix[0][1]))
-            self.assertTrue(numpy.isnan(matrix[1][0]))
-        else:
+        if not numpy.isnan(Qxy):
             self.assertAlmostEqual(matrix[0][1], -Qxy, places=places)
             self.assertAlmostEqual(matrix[1][0], -Qxy, places=places)
-        if numpy.isnan(Qxz):
-            self.assertTrue(numpy.isnan(matrix[0][2]))
-            self.assertTrue(numpy.isnan(matrix[2][0]))
-        else:
+        if not numpy.isnan(Qxz):
             self.assertAlmostEqual(matrix[0][2], -Qxz, places=places)
             self.assertAlmostEqual(matrix[2][0], -Qxz, places=places)
-        if numpy.isnan(Qyz):
-            self.assertTrue(numpy.isnan(matrix[1][2]))
-            self.assertTrue(numpy.isnan(matrix[2][1]))
-        else:
+        if not numpy.isnan(Qyz):
             self.assertAlmostEqual(matrix[1][2], -Qyz, places=places)
             self.assertAlmostEqual(matrix[2][1], -Qyz, places=places)
 
@@ -592,7 +571,7 @@ class TestHalbachCassette(unittest.TestCase):
         pos = [0,-0.02, 0]
         block_pos = self.cassette_rectangle.get_item(0).pos
         self.cassette_rectangle.shift_pos(pos - block_pos)
-        
+
         x = 0.04
         y = 0.04
         z = [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8]
